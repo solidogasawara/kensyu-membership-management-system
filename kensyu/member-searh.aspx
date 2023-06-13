@@ -32,10 +32,6 @@
                 contentType: "application/json",
                 data: JSON.stringify(columnName)
             })
-            // alert(columnName);
-            //var xmlhttp = new XMLHttpRequest();
-            //xmlhttp.open("POST", "member-searh.aspx/sortTable?columnName=" + columnName, true);
-            //xmlhttp.send();
         }
     </script>
     <script type="text/javascript" src="./js/common.js" defer></script>

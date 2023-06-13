@@ -27,6 +27,8 @@ namespace kensyu
 
         protected void SearchButton_Click(object sender, EventArgs e)
         {
+            ViewState.Clear();
+
             // 入力されたパラメータを取得する
 
             // 全件表示フラグ(性別や会員状態のチェックボックスに両方チェックが入った場合全件表示にする)
@@ -95,7 +97,13 @@ namespace kensyu
                 }
             }
 
-            string prefecture = Request.QueryString["prefecture"]; // 都道府県(都道府県名ではなく、コードで送られる)
+            int prefecture_id = -1; // 都道府県(初期値は-1)
+            
+            // 都道府県が指定されていたなら、int型に変換してprefecture_idに代入する
+            if (!String.IsNullOrEmpty(Request.QueryString["prefecture"]))
+            {
+                prefecture_id = Convert.ToInt32(Request.QueryString["prefecture"]);
+            }
 
             // 会員状態(パラメータ: 1 = 有効, 2 = 無効)
             bool membershipStatus = false; // 会員状態(false = 無効, true = 有効)
@@ -141,13 +149,15 @@ namespace kensyu
 
                 // SQL文を作成する
                 StringBuilder sb = new StringBuilder();
-                sb.Append(@"SELECT * FROM V_Customer");
+                sb.Append(@"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c");
+                sb.Append(@"  JOIN M_Prefecture AS p");
+                sb.Append(@"    ON c.prefecture_id = p.id");
 
                 // 全件表示フラグがfalseの時だけ、検索条件を追加していく
-                if(!dispAll)
+                if (!dispAll)
                 {
                     // 検索条件(id)
-                    sb.Append(@" WHERE id = @id");
+                    sb.Append(@" WHERE c.id = @id");
                     command.Parameters.Add(new SqlParameter("@id", id));
 
                     // nameの中身が空なら検索条件にnameを含めない
@@ -183,9 +193,9 @@ namespace kensyu
                         command.Parameters.Add(new SqlParameter("@gender", gender));
                     }
 
-                    // 検索条件(prefecture)
-                    sb.Append(@"    OR prefecture = @prefecture");
-                    command.Parameters.Add(new SqlParameter("@prefecture", prefecture));
+                    // 検索条件(prefecture_id)
+                    sb.Append(@"    OR prefecture_id = @prefecture");
+                    command.Parameters.Add(new SqlParameter("@prefecture", prefecture_id));
 
                     // 会員状態のパラメータが空なら検索条件にmembership_statusを含めない
                     if (!isEmptyMembershipStatus)
