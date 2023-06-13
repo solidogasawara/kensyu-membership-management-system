@@ -236,6 +236,7 @@ namespace kensyu
         {
             Debug.WriteLine(columnName);
 
+            // クリックされたカラムがidなら、idを基準に昇順、降順でソートする
             if(columnName == "id")
             {
                 if (sortMethod == "asc")
@@ -246,8 +247,9 @@ namespace kensyu
                     tableData.Sort((a, b) => Convert.ToInt32(b[0]).CompareTo(Convert.ToInt32(a[0])));
                 }
             }
-            
-            if(columnName == "birthday")
+
+            // クリックされたカラムが誕生日なら、誕生日を基準に昇順、降順でソートする
+            if (columnName == "birthday")
             {
                 if (sortMethod == "asc")
                 {
@@ -258,14 +260,14 @@ namespace kensyu
                 }
             }
 
-            //tableData.RemoveAt(0);
-
             JavaScriptSerializer js = new JavaScriptSerializer();
 
+            // Listをjsonの形にする
             string json = js.Serialize(tableData);
 
             Debug.WriteLine(json);
 
+            // jsonを返す
             return json;
         }
     }

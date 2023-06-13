@@ -25,20 +25,34 @@
             });
         }
 
+        // 前にクリックされたテーブルのカラム
+        // 始めはidがソートされた状態で表示されるため、初期値は"id"
         var columnNamePrev = "id";
+
+        // 降順でソートするか
         var desc = false;
 
+        // テーブル情報をC#側に送り、C#側でソートしたのちその結果を受け取る
+        // その結果をもとにテーブルを更新する
         function sortTable(columnName) {
 
+            // 前にクリックしたカラムと同じカラムがクリックされたなら、昇順、降順を入れ替える
+            // もし違うカラムだったなら必ず昇順でソートする
             if (columnNamePrev == columnName) {
                 desc = !desc;
             } else {
                 desc = false;
             }
 
-            var idSortToggle = document.getElementById("idSortToggle");
-            var bdSortToggle = document.getElementById("bdSortToggle");
+            // ソートの昇順、降順を表すソートインジケーター
+            // 昇順 = 「▲」、降順 = 「▼」
+            var idSortToggle = document.getElementById("idSortToggle"); // id
+            var bdSortToggle = document.getElementById("bdSortToggle"); // 誕生日
 
+            // クリックされたカラムがidなら、idのソートインジケーターを表示して、
+            // 誕生日のソートインジケーターを非表示にする
+            // birthdayの場合はその逆
+            // 昇順、降順で三角の向きを切り替える
             if (columnName == "id") {
                 idSortToggle.style.visibility = "visible";
                 bdSortToggle.style.visibility = "hidden";
@@ -59,6 +73,7 @@
                 }
             }
 
+            // 今回押されたカラムを変数に保存する
             columnNamePrev = columnName;
 
             // テーブルの取得
@@ -67,6 +82,7 @@
             // テーブル情報を格納する配列
             var tableData = [];
 
+            // テーブル情報を配列に格納する
             // 1行目はテーブルのカラム名が入っている(["id", "名前", "名前(かな)"..."操作"])
             // テーブルの1行目は不要なため、iは1からスタート
             for (var i = 1; i < table.rows.length; i++) {
@@ -78,7 +94,7 @@
                 tableData.push(rowData);
             }
 
-            // テーブル情報と、並び替えの基準となるカラム名をC#側に渡して
+            // テーブル情報と、並び替えの基準となるカラム名、並び替え順をC#側に渡して
             // C#側でソートしたものを受け取る
             // 受け取ったものをテーブルに入れて画面上での並び替えを完了させる
             $.ajax({
@@ -95,15 +111,12 @@
 
                     var arrayData = JSON.parse(data.d);
 
-                    console.log("arrayDataLength: " + arrayData.length);
-                    console.log("tableRowLength: " + table.rows.length);
-
                     // ソートされたテーブル情報を元にテーブルを更新する
+                    // 実際にデータが入っている行は2行目からなので、iは1
                     for (var i = 1; i < table.rows.length; i++) {
                         var dataRow = arrayData[i - 1];
                         var tableRow = table.rows[i];
                         for (var j = 0; j < tableRow.cells.length - 1; j++) {
-                            console.log("i: " + i);
                             tableRow.cells[j].innerText = dataRow[j];
                         }
                     }
