@@ -25,21 +25,102 @@
             });
         }
 
+        var columnNamePrev = "id";
+        var desc = false;
+
         function sortTable(columnName) {
+
+            if (columnNamePrev == columnName) {
+                desc = !desc;
+            } else {
+                desc = false;
+            }
+
+            var idSortToggle = document.getElementById("idSortToggle");
+            var bdSortToggle = document.getElementById("bdSortToggle");
+
+            if (columnName == "id") {
+                idSortToggle.style.visibility = "visible";
+                bdSortToggle.style.visibility = "hidden";
+
+                if (!desc) {
+                    idSortToggle.innerText = "▲";
+                } else {
+                    idSortToggle.innerText = "▼";
+                }
+            } else if (columnName == "birthday") {
+                idSortToggle.style.visibility = "hidden";
+                bdSortToggle.style.visibility = "visible";
+
+                if (!desc) {
+                    bdSortToggle.innerText = "▲";
+                } else {
+                    bdSortToggle.innerText = "▼";
+                }
+            }
+
+            columnNamePrev = columnName;
+
+            // テーブルの取得
+            var table = document.getElementById('search-result');
+
+            // テーブル情報を格納する配列
+            var tableData = [];
+
+            // 1行目はテーブルのカラム名が入っている(["id", "名前", "名前(かな)"..."操作"])
+            // テーブルの1行目は不要なため、iは1からスタート
+            for (var i = 1; i < table.rows.length; i++) {
+                var rowData = [];
+                var row = table.rows[i];
+                for (var j = 0; j < row.cells.length; j++) {
+                    rowData.push(row.cells[j].innerText);
+                }
+                tableData.push(rowData);
+            }
+
+            // テーブル情報と、並び替えの基準となるカラム名をC#側に渡して
+            // C#側でソートしたものを受け取る
+            // 受け取ったものをテーブルに入れて画面上での並び替えを完了させる
             $.ajax({
                 type: "POST",
-                url: '/member-searh.aspx/SortTable',
+                url: '<%= ResolveUrl("/member-searh.aspx/SortTable") %>',
                 contentType: "application/json",
-                data: JSON.stringify(columnName)
-            })
+                data: JSON.stringify({
+                    "tableData": tableData,
+                    "columnName": columnName,
+                    "sortMethod": desc ? "desc" : "asc"
+                }),
+                success: function (data) {
+                    // alert("成功: " + data.d);
+
+                    var arrayData = JSON.parse(data.d);
+
+                    console.log("arrayDataLength: " + arrayData.length);
+                    console.log("tableRowLength: " + table.rows.length);
+
+                    // ソートされたテーブル情報を元にテーブルを更新する
+                    for (var i = 1; i < table.rows.length; i++) {
+                        var dataRow = arrayData[i - 1];
+                        var tableRow = table.rows[i];
+                        for (var j = 0; j < tableRow.cells.length - 1; j++) {
+                            console.log("i: " + i);
+                            tableRow.cells[j].innerText = dataRow[j];
+                        }
+                    }
+                },
+                error: function (result) {
+                    alert("失敗: " + result.status);
+                }
+            });
         }
+
+        
     </script>
     <script type="text/javascript" src="./js/common.js" defer></script>
 </head>
   <body>
      <form method="get" action="member-searh.aspx" runat="server">
-         
-
+     <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
     <div id="modal-delete-confirm-window">
         <p>削除しますか？</p>
         <%--<form method="post" action="">
@@ -182,15 +263,21 @@
             </table>
         <%--</form>--%>
         <div class="search-list">
-          <table>
+          <table id="search-result">
             <asp:Repeater id="Repeater1" runat="server">
                 <HeaderTemplate>
                     <tr>
-                        <th onclick="sortTable('id')">ID</th>
+                        <th onclick="sortTable('id')">
+                            ID 
+                            <div id="idSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: visible;">▲</div>
+                        </th>
                         <th>名前</th>
                         <th>名前(かな)</th>
                         <th>メールアドレス</th>
-                        <th>生年月日</th>
+                        <th onclick="sortTable('birthday')">
+                            生年月日 
+                            <div id="bdSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: hidden;">▲</div>
+                        </th>
                         <th>性別</th>
                         <th>都道府県</th>
                         <th>会員状態</th>

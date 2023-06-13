@@ -10,11 +10,14 @@ using System.Configuration;
 using Newtonsoft.Json;
 using System.Text;
 using System.Diagnostics;
+using System.Web.Script.Serialization;
 
 namespace kensyu
 {
     public partial class membersearh : Page
     {
+        private static DataTable dt;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             
@@ -220,7 +223,8 @@ namespace kensyu
                 da.Fill(dt);
 
                 DataRow[] rows = dt.Select();
-                
+
+                membersearh.dt = dt;
 
                 Repeater1.DataSource = dt;
                 Repeater1.DataBind();
@@ -228,9 +232,41 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static void SortTable(string columnName)
+        public static string SortTable(List<List<string>> tableData, string columnName, string sortMethod)
         {
             Debug.WriteLine(columnName);
+
+            if(columnName == "id")
+            {
+                if (sortMethod == "asc")
+                {
+                    tableData.Sort((a, b) => Convert.ToInt32(a[0]).CompareTo(Convert.ToInt32(b[0])));
+                } else if(sortMethod == "desc")
+                {
+                    tableData.Sort((a, b) => Convert.ToInt32(b[0]).CompareTo(Convert.ToInt32(a[0])));
+                }
+            }
+            
+            if(columnName == "birthday")
+            {
+                if (sortMethod == "asc")
+                {
+                    tableData.Sort((a, b) => DateTime.Parse(a[4]).CompareTo(DateTime.Parse(b[4])));
+                } else if(sortMethod == "desc")
+                {
+                    tableData.Sort((a, b) => DateTime.Parse(b[4]).CompareTo(DateTime.Parse(a[4])));
+                }
+            }
+
+            //tableData.RemoveAt(0);
+
+            JavaScriptSerializer js = new JavaScriptSerializer();
+
+            string json = js.Serialize(tableData);
+
+            Debug.WriteLine(json);
+
+            return json;
         }
     }
 }
