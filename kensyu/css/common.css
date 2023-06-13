@@ -1,0 +1,291 @@
+:root{
+    --default-text-color: #333;
+    --default-text-link-color: #428bca;
+    --default-text-link-hover-color: #265279;
+    --default-border-color: #ccc;
+    --header-background-color: #2c3742;
+    --list-head-background-color: #f5f5f5;
+}
+
+html{
+    margin: 0;
+    padding: 0;
+    font-size: 62.5%;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', 'YuGothic', 'MS PGothic', sans-serif;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--default-text-color);
+}
+
+*{
+    box-sizing: border-box;
+}
+
+ul{
+    margin: 0;
+    padding: 0;
+}
+ul li{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+a, a:visited{
+    text-decoration: none;
+    color: #0000ff;
+}
+
+input, select, textarea, button{
+    outline: none;
+    border: none;
+    box-sizing: border-box;
+}
+
+input[type="date"], input[type="number"], input[type="text"], input[type="password"], textarea, select{
+    padding: 8px;
+    width: 100%;
+    border: 1px solid var(--default-border-color);
+    border-radius: 4px;
+}
+
+input[type="date"]{
+    width: auto;
+}
+
+select{
+    width: auto;
+}
+
+input[type="submit"], input[type="button"], button, .link-button{
+    margin: 0;
+    padding: 4px;
+    display: inline-block;
+    color: #fff !important;
+    background-color: #428bca;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+label{
+    cursor: pointer;
+}
+
+.input-check-list{
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.input-check-list label{
+    display: flex;
+    align-items: flex-start;
+}
+
+.search-input-date-select-input{
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.edit-button{
+    background-color: #f0ad4e !important;
+}
+
+.delete-button{
+    background-color: #d9534f !important;
+}
+
+.two-column{
+    display: flex;
+    gap: 8px;
+}
+.two-column > div{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#modal-delete-confirm-window{
+    margin: 0;
+    padding: 16px 8px;
+    width: 50%;
+    height: auto;
+    display: none;
+    background-color: #fff;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    transition: all 0.3s ease-in-out;
+    border-radius: 8px;
+}
+#modal-delete-confirm-window p{
+    margin: 0 0 16px 0;
+    padding: 0;
+    font-size: 2.4rem;
+    text-align: center;
+}
+#modal-delete-confirm-window input{
+    width: 86px;
+    font-size: 2.0rem;
+}
+#modal-delete-confirm-window .button-box{
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 16px;
+}
+#modal-delete-confirm-window .yes{
+    background-color: #d9534f !important;
+}
+
+#modal-background{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    background-color: #000000;
+    opacity: 0.5;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 999;
+    transition: all 0.3s ease-in-out;
+}
+
+header{
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    background-color: #000;
+    color: #fff;
+    font-size: 1.6rem;
+}
+header h1{
+    margin: 0 100px 0 0;
+    padding: 0;
+    font-size: 1.6rem;
+}
+header a, header a:visited{
+    color: #fff;
+}
+header nav ul{
+    display: flex;
+    gap: 16px;
+}
+
+main{
+    margin: 0;
+    padding: 8px;
+}
+main h2{
+    margin: 0px 0px 8px 0px;
+    padding: 0px 0px 0px 4px;
+    font-weight: bold;
+    border-left: solid 8px var(--default-text-color);
+    font-size: 1.6rem;
+}
+main table{
+    margin: 0px 0px 8px 0px;
+    padding: 0px;
+    width: 100%;
+    border-collapse: collapse;
+    border: solid 1px var(--default-border-color);
+}
+main table th{
+    padding: 2px;
+    border: solid 1px var(--default-border-color);
+    background-color: var(--list-head-background-color);
+    font-weight: bold;
+    text-align: center;
+}
+main table td{
+    padding: 2px;
+    border: solid 1px var(--default-border-color);
+    background-color: #fff;
+}
+
+main .search-form{
+    margin-bottom: 20px;
+}
+main .search-form td{
+    width: 40%;
+}
+main .search-form .button-box{
+    padding: 6px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+main .search-form .search-button{
+    width: 200px;
+    max-width: 100%;
+}
+
+main .search-list td{
+    text-align: center;
+}
+main .search-list .button-box{
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+main .input-form .button-box{
+    padding: 6px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+main .input-form .button-box input[type="submit"]{
+    width: 200px;
+    max-width: 100%;
+}
+
+main .pager{
+    margin: 0 0 8px;
+    padding: 0;
+}
+main .pager > ul{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    justify-content: center;
+}
+main .pager > ul > li{
+    margin: 0;
+    padding: 0;
+}
+main .pager > ul > li > .content{
+    border: 1px solid var(--default-border-color);
+    box-sizing: border-box;
+    display: block;
+    margin: 0;
+    padding: 4px 8px;
+}
+main .pager > ul > li > span.content{
+    background-color: #428bca;
+    color: #fff;
+}
