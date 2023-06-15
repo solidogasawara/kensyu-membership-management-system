@@ -44,33 +44,14 @@
                 desc = false;
             }
 
-            // ソートの昇順、降順を表すソートインジケーター
-            // 昇順 = 「▲」、降順 = 「▼」
-            var idSortToggle = document.getElementById("idSortToggle"); // id
-            var bdSortToggle = document.getElementById("bdSortToggle"); // 誕生日
-
             // クリックされたカラムがidなら、idのソートインジケーターを表示して、
             // 誕生日のソートインジケーターを非表示にする
             // birthdayの場合はその逆
             // 昇順、降順で三角の向きを切り替える
             if (columnName == "id") {
-                idSortToggle.style.visibility = "visible";
-                bdSortToggle.style.visibility = "hidden";
-
-                if (!desc) {
-                    idSortToggle.innerText = "▲";
-                } else {
-                    idSortToggle.innerText = "▼";
-                }
+                changeIdSortIndicatior();
             } else if (columnName == "birthday") {
-                idSortToggle.style.visibility = "hidden";
-                bdSortToggle.style.visibility = "visible";
-
-                if (!desc) {
-                    bdSortToggle.innerText = "▲";
-                } else {
-                    bdSortToggle.innerText = "▼";
-                }
+                changeBdSortIndicator();
             }
 
             // 今回押されたカラムを変数に保存する
@@ -109,6 +90,7 @@
                 success: function (data) {
                     // alert("成功: " + data.d);
 
+                    // ソートされたテーブル情報
                     var arrayData = JSON.parse(data.d);
 
                     // ソートされたテーブル情報を元にテーブルを更新する
@@ -127,12 +109,195 @@
             });
         }
 
+        function changeIdSortIndicatior() {
+            // ソートの昇順、降順を表すソートインジケーター
+            // 昇順 = 「▲」、降順 = 「▼」
+            var idSortToggle = document.getElementById("idSortToggle"); // id
+            var bdSortToggle = document.getElementById("bdSortToggle"); // 誕生日
+
+            idSortToggle.style.visibility = "visible";
+            bdSortToggle.style.visibility = "hidden";
+
+            if (!desc) {
+                idSortToggle.innerText = "▲";
+            } else {
+                idSortToggle.innerText = "▼";
+            }
+        }
+
+        function changeBdSortIndicator() {
+            // ソートの昇順、降順を表すソートインジケーター
+            // 昇順 = 「▲」、降順 = 「▼」
+            var idSortToggle = document.getElementById("idSortToggle"); // id
+            var bdSortToggle = document.getElementById("bdSortToggle"); // 誕生日
+
+            idSortToggle.style.visibility = "hidden";
+            bdSortToggle.style.visibility = "visible";
+
+            if (!desc) {
+                bdSortToggle.innerText = "▲";
+            } else {
+                bdSortToggle.innerText = "▼";
+            }
+        }
+
+        function searchButtonClicked() {
+            // 入力された情報を取得する
+            console.log(document.id);
+            var id = document.getElementsByName('id')[0].value; // id
+            var email = document.getElementsByName('email')[0].value; // メールアドレス
+            var name = document.getElementsByName('name')[0].value; // 名前(漢字)
+            var nameKana = document.getElementsByName('name_kana')[0].value; // 名前(かな)
+            var birthStart = document.getElementsByName('birth-start')[0].value; // 誕生日(始め)
+            var birthEnd = document.getElementsByName('birth-end')[0].value; // 誕生日(終わり)
+            var prefecture = document.getElementsByName('prefecture')[0].value; // 都道府県
+            var gender = document.getElementsByName('sex[]'); // 性別
+            var memberStatus = document.getElementsByName('member-status[]'); // 会員状態
+
+            console.log(gender);
+            console.log(memberStatus);
+
+            var genderValue = "";
+            var memberStatusValue = "";
+
+            var genderCBoxChecked = [false, false];
+            var memberStatusCBoxChecked = [false, false];
+
+            for (var i = 0; i < gender.length; i++) {
+                if (gender[i].checked) {
+                    genderCBoxChecked[i] = true;
+                }
+            }
+
+            if (genderCBoxChecked[0] && genderCBoxChecked[1]) {
+                genderValue = "both";
+            } else {
+                if (genderCBoxChecked[0]) {
+                    genderValue = gender[0].value;
+                }
+                if (genderCBoxChecked[1]) {
+                    genderValue = gender[1].value;
+                }
+            }
+
+            for (var i = 0; i < memberStatus.length; i++) {
+                if (memberStatus[i].checked) {
+                    memberStatusCBoxChecked[i] = true;
+                }
+            }
+
+            if (memberStatusCBoxChecked[0] && memberStatusCBoxChecked[1]) {
+                memberStatusValue = "both";
+            } else {
+                if (memberStatusCBoxChecked[0]) {
+                    memberStatusValue = gender[0].value;
+                }
+                if (memberStatusCBoxChecked[1]) {
+                    memberStatusValue = gender[1].value;
+                }
+            }
+
+            
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-searh.aspx/SearchButton_Click") %>',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "idStr": id,
+                    "emailStr": email,
+                    "nameStr": name,
+                    "nameKanaStr": nameKana,
+                    "birthStartStr": birthStart,
+                    "birthEndStr": birthEnd,
+                    "prefectureStr": prefecture,
+                    "genderStr": genderValue,
+                    "memberStatusStr": memberStatusValue
+                }),
+                success: function (data) {
+                    columnNamePrev = "id";
+                    desc = false;
+                    changeIdSortIndicatior();
+
+                    // DBから取得した情報
+                    var arrayData = JSON.parse(data.d);
+
+
+                    // テーブル要素
+                    var table = document.getElementById('search-result');
+
+                    var tableHeader = document.getElementById('search-table-header');
+                    tableHeader.style.display = '';
+
+                    // 既に表示されているテーブルを初期化する
+                    // カラムの行は削除しないようにするので、iは1から
+                    while (table.rows.length > 1) {
+                        table.deleteRow(1);
+                    }
+
+                    if (arrayData.length == 0) {
+                        tableHeader.style.display = 'none';
+                        return;
+                    }
+
+                    // 取得した情報を元にテーブルを作成する
+                    for (var i = 0; i < arrayData.length; i++) {
+                        var arrayRow = arrayData[i];
+                        // tr要素の作成
+                        var tr = document.createElement('tr');
+                        for (var j = 0; j < arrayRow.length; j++) {
+                            // td要素の作成
+                            var td = document.createElement('td');
+                            
+                            // td要素に取得した情報を追加する
+                            td.appendChild(document.createTextNode(arrayRow[j]));
+                            // tr要素にtd要素を追加する
+                            tr.appendChild(td);
+                        }
+
+                        var td = document.createElement('td');
+
+                        var div = document.createElement('div');
+                        div.className = "button-box";
+
+                        // 編集、削除ボタンを作成する
+                        // 編集ボタン
+                        var a = document.createElement('a');
+                        a.className = "link-button edit-button";
+                        a.href = "member-edit.aspx?id=1";
+                        a.appendChild(document.createTextNode('編集'));
+
+                        // 削除ボタン
+                        var input = document.createElement('input');
+                        input.className = "delete-button";
+                        input.type = "button";
+                        input.onclick = "deleteConfirmOpen(1)";
+                        input.value = "削除";
+
+                        // 編集、削除ボタンをtr要素に追加する
+                        div.appendChild(a);
+                        div.appendChild(input);
+
+                        td.appendChild(div);
+
+                        tr.appendChild(td);
+
+                        // table要素にtr要素を追加する
+                        table.appendChild(tr);
+                    }
+                },
+                error: function (result) {
+                    alert("失敗: " + result.status);
+                }
+            });
+        }
+
         
     </script>
     <script type="text/javascript" src="./js/common.js" defer></script>
 </head>
   <body>
-     <form method="get" action="member-searh.aspx" runat="server">
+     <%--<form method="get" action="member-searh.aspx" runat="server">
      <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
     <div id="modal-delete-confirm-window">
         <p>削除しますか？</p>
@@ -143,7 +308,7 @@
             </div>
             <input id="modal-member-delete-id" type="hidden" name="id" value="" />
         </form>--%>
-    </div>
+    <%--</div>--%>
     <div id="modal-background"></div>
     <header>
         <h1>会員管理システム</h1>
@@ -269,7 +434,8 @@
                     <td colspan="4">
                         <div class="button-box">
                              <%--<input class="search-button" type="submit" value="検索" />--%> 
-                            <asp:Button ID="SearchButton" class="search-button" runat="server" Text="検索" OnClick="SearchButton_Click" />
+                            <%--<asp:Button ID="SearchButton" class="search-button" runat="server" Text="検索" OnClick="SearchButton_Click" />--%>
+                            <button class="search-button" onclick="searchButtonClicked();">検索</button>
                         </div>
                     </td>
                 </tr>
@@ -277,9 +443,9 @@
         <%--</form>--%>
         <div class="search-list">
           <table id="search-result">
-            <asp:Repeater id="Repeater1" runat="server">
-                <HeaderTemplate>
-                    <tr>
+           <%-- <asp:Repeater id="Repeater1" runat="server">
+                <HeaderTemplate>--%>
+                    <tr id="search-table-header" style="display: none;">
                         <th onclick="sortTable('id')">
                             ID 
                             <div id="idSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: visible;">▲</div>
@@ -296,9 +462,9 @@
                         <th>会員状態</th>
                         <th>操作</th>
                     </tr>
-                </HeaderTemplate>
+                <%--</HeaderTemplate>--%>
 
-                <ItemTemplate>
+                <%--<ItemTemplate>
                     <tr>
                         <td><%# Eval("id") %></td>
                         <td><%# Eval("name") %></td>
@@ -316,7 +482,7 @@
                         </td>
                     </tr>
                 </ItemTemplate>
-            </asp:Repeater>
+            </asp:Repeater>--%>
         </table>
         </div>
         <div class="pager">
@@ -330,6 +496,6 @@
             </ul>
         </div>
     </main>
-         </form>
+         <%--</form>--%>
 </body>
 </html>

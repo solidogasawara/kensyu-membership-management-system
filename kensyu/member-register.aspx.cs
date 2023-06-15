@@ -20,5 +20,13 @@ namespace kensyu
 
             }
         }
+
+        protected void SubmitButton_Click(object sender, EventArgs e)
+        {
+//            INSERT INTO M_Customer(id, name, name_kana, mail, birthday, gender, prefecture_id, created_at, updated_at)
+//VALUES(11, '田中 太郎', 'たなか たろう', 't.tanaka@solidseed.co.jp', '1900-01-01', 0, 4, '2023-06-13', NULL)
+
+
+        }
     }
 }
