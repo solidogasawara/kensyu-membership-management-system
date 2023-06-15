@@ -16,7 +16,6 @@ namespace kensyu
 {
     public partial class membersearh : Page
     {
-        private static DataTable dt;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -28,10 +27,9 @@ namespace kensyu
             }
         }
 
-        protected void SearchButton_Click(object sender, EventArgs e)
+        [System.Web.Services.WebMethod]
+        public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
         {
-            ViewState.Clear();
-
             // 入力されたパラメータを取得する
 
             // 全件表示フラグ(性別や会員状態のチェックボックスに両方チェックが入った場合全件表示にする)
@@ -40,29 +38,29 @@ namespace kensyu
             int id = -1; // 会員ID(初期値は-1)
 
             // ID検索欄に文字列が入力されているなら、int型に変換してidに代入する
-            if (!String.IsNullOrEmpty(Request.QueryString["id"]))
+            if (!String.IsNullOrEmpty(idStr))
             {
-                id = Convert.ToInt32(Request.QueryString["id"]);
+                id = Convert.ToInt32(idStr);
             }
 
-            string email = Request.QueryString["email"]; // メールアドレス
-            string name = Request.QueryString["name"]; // 名前(漢字)
-            string nameKana = Request.QueryString["name_kana"]; // 名前(かな)
+            string email = emailStr; // メールアドレス
+            string name = nameStr; // 名前(漢字)
+            string nameKana = nameKanaStr; // 名前(かな)
 
             // 誕生日検索
             DateTime birthStart = DateTime.Now; // 始めの日付(初期値は検索実行した時の時刻)
             DateTime birthEnd = DateTime.Now; // 終わりの日付(初期値は検索実行した時の時刻)
 
             // 誕生日検索欄(始めの日付)に入力がされていれば、DateTime型にParseしてbirthStartに代入する
-            if(!String.IsNullOrEmpty(Request.QueryString["birth-start"]))
+            if (!String.IsNullOrEmpty(birthStartStr))
             {
-                birthStart = DateTime.Parse(Request.QueryString["birth-start"]);
+                birthStart = DateTime.Parse(birthStartStr);
             }
 
             // 誕生日検索欄(終わりの日付)に入力がされていれば、DateTime型にParseしてbirthStartに代入する
-            if (!String.IsNullOrEmpty(Request.QueryString["birth-end"]))
+            if (!String.IsNullOrEmpty(birthEndStr))
             {
-                birthEnd = DateTime.Parse(Request.QueryString["birth-end"]);
+                birthEnd = DateTime.Parse(birthEndStr);
             }
 
             // 性別(パラメータ: 1 = 男性, 2 = 女性)
@@ -71,25 +69,21 @@ namespace kensyu
 
             // 男性、女性どちらかのチェックボックスにチェックが入っていて、
             // 性別のパラメータに中身があるならフラグをfalseにする
-            if(!String.IsNullOrEmpty(Request.QueryString["sex[]"]))
+            if (!String.IsNullOrEmpty(genderStr))
             {
                 // パラメータに中身が入っていたので、フラグをfalseにする
                 isEmptyGender = false;
 
-                // 取得したパラメータ
-                string parameter = Request.QueryString["sex[]"];
-
                 // 男性、女性のどちらのチェックボックスにもチェックが入っていた場合、
-                // 「1,2」のような形でparameterに代入されている
-                // Splitメソッドでカンマ区切りで文字列を配列に分割してその長さが1より大きければ、
-                // 2つのチェックボックスにチェックが入っているとみなして、全件表示フラグをtrueにする
-                if (parameter.Split(',').Length > 1)
+                // 「both」が渡される
+                if (genderStr == "both")
                 {
                     dispAll = true;
-                } else
+                }
+                else
                 {
                     // 受け取ったパラメータをint型に変換する
-                    int genderNumber = Convert.ToInt32(parameter);
+                    int genderNumber = Convert.ToInt32(genderStr);
 
                     // パラメータは1が男性、2が女性を表しているため、genderNumberが2だった場合は
                     // genderをtrueにする
@@ -101,38 +95,34 @@ namespace kensyu
             }
 
             int prefecture_id = -1; // 都道府県(初期値は-1)
-            
+
             // 都道府県が指定されていたなら、int型に変換してprefecture_idに代入する
-            if (!String.IsNullOrEmpty(Request.QueryString["prefecture"]))
+            if (!String.IsNullOrEmpty(prefectureStr))
             {
-                prefecture_id = Convert.ToInt32(Request.QueryString["prefecture"]);
+                prefecture_id = Convert.ToInt32(prefectureStr);
             }
 
-            // 会員状態(パラメータ: 1 = 有効, 2 = 無効)
-            bool membershipStatus = false; // 会員状態(false = 無効, true = 有効)
+            // 会員状態(パラメータ: 1 = 有効, 2 = 退会)
+            bool membershipStatus = false; // 会員状態(false = 退会, true = 有効)
             bool isEmptyMembershipStatus = true;
 
             // 有効、無効どちらかのチェックボックスにチェックが入っていて、
             // 会員状態のパラメータに中身があるならフラグをfalseにする
-            if(!String.IsNullOrEmpty(Request.QueryString["member-status[]"]))
+            if (!String.IsNullOrEmpty(memberStatusStr))
             {
                 // パラメータに中身が入っていたので、フラグをfalseにする
                 isEmptyMembershipStatus = false;
 
-                // 取得したパラメータ
-                string parameter = Request.QueryString["member-status[]"];
-
                 // 有効、無効のどちらのチェックボックスにもチェックが入っていた場合、
-                // 「1,2」のような形でparameterに代入されている
-                // Splitメソッドでカンマ区切りで文字列を配列に分割してその長さが1より大きければ、
-                // 2つのチェックボックスにチェックが入っているとみなして、全件表示フラグをtrueにする
-                if(parameter.Split(',').Length > 1)
+                // 「both」が渡される
+                if (memberStatusStr == "both")
                 {
                     dispAll = true;
-                } else
+                }
+                else
                 {
                     // 受け取ったパラメータをint型に変換する
-                    int membershipStatusNumber = Convert.ToInt32(parameter);
+                    int membershipStatusNumber = Convert.ToInt32(memberStatusStr);
 
                     // パラメータは1が有効、2が無効を表しているため、membershipStatusNumberが1だった場合は
                     // membershipStatusをtrueにする
@@ -218,16 +208,32 @@ namespace kensyu
 
                 connection.Open();
 
-                SqlDataAdapter da = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
+                List<List<string>> tableData = new List<List<string>>();
 
-                DataRow[] rows = dt.Select();
+                SqlDataReader reader = command.ExecuteReader();
+                while(reader.Read())
+                {
+                    //c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status
+                    List<string> row = new List<string>();
 
-                membersearh.dt = dt;
+                    row.Add(reader["id"].ToString());
+                    row.Add(reader["name"].ToString());
+                    row.Add(reader["name_kana"].ToString());
+                    row.Add(reader["mail"].ToString());
+                    row.Add(reader["birthday"].ToString());
+                    row.Add((bool) reader["gender"] ? "女性" : "男性");
+                    row.Add(reader["prefecture"].ToString());
+                    row.Add((bool) reader["membership_status"] ? "有効" : "退会");
 
-                Repeater1.DataSource = dt;
-                Repeater1.DataBind();
+                    tableData.Add(row);
+                }
+
+                JavaScriptSerializer js = new JavaScriptSerializer();
+
+                // Listをjsonの形にする
+                string json = js.Serialize(tableData);
+
+                return json;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="member-register.aspx.cs" Inherits="kensyu.membersearh" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="member-register.aspx.cs" Inherits="kensyu.memberregister" %>
 <!DOCTYPE html>
 <head>
     <title>会員登録 | 会員管理システム</title>
@@ -19,7 +19,7 @@
     </header>
     <main>
         <h2>会員登録</h2>
-        <form class="input-form" method="post" action="member-edit.aspx">
+        <form class="input-form" method="post" action="member-register.aspx" runat="server">
             <table>
                 <tr>
                     <th>名前</th>
@@ -118,7 +118,8 @@
                 <tr>
                     <td colspan="4">
                         <div class="button-box">
-                            <input type="submit" value="登録" />
+                            <asp:Button ID="SubmitButton" class="submit-button" runat="server" Text="登録" OnClick="SubmitButton_Click" />
+                            <%--<input type="submit" value="登録" />--%>
                         </div>
                     </td>
                 </tr>
