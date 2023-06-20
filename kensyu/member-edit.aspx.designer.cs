@@ -10,6 +10,6 @@
 namespace kensyu {
     
     
-    public partial class membersearh {
+    public partial class memberedit {
     }
 }

@@ -3,8 +3,56 @@
 <head>
     <title>会員登録 | 会員管理システム</title>
     <link rel="stylesheet" href="./css/common.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
-        //javascript
+        function registerButtonClicked() {
+            var firstName = document.getElementsByName('first_name')[0].value;
+            var lastName = document.getElementsByName('last_name')[0].value;
+            var firstNameKana = document.getElementsByName('first_name_kana')[0].value;
+            var lastNameKana = document.getElementsByName('last_name_kana')[0].value;
+            var email = document.getElementsByName('email')[0].value;
+            var birthday = document.getElementsByName('birthday')[0].value;
+            var gender = document.getElementsByName('sex');
+            var prefecture = document.getElementsByName('prefecture')[0].value;
+
+            var genderValue = "";
+
+            var genderRBtnSelected = [false, false];
+            for (var i = 0; i < gender.length; i++) {
+                genderRBtnSelected[i] = true;
+                break;
+            }
+
+            if (genderRBtnSelected[0]) {
+                genderValue = gender[0].value;
+            }
+
+            if (genderRBtnSelected[1]) {
+                genderValue = gender[1].value;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-register.aspx/RegisterButton_Clicked") %>',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "lastName": lastName,
+                    "firstName": firstName,
+                    "lastNameKana": lastNameKana,
+                    "firstNameKana": firstNameKana,
+                    "email": email,
+                    "birthdayStr": birthday,
+                    "genderStr": genderValue,
+                    "prefecture": prefecture
+                }),
+                success: function (data) {
+                    alert("登録が完了しました");
+                },
+                error: function (result) {
+                    alert("登録に失敗しました");
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -19,7 +67,8 @@
     </header>
     <main>
         <h2>会員登録</h2>
-        <form class="input-form" method="post" action="member-register.aspx" runat="server">
+        <div class="input-form">
+<%--        <form class="input-form" method="post" action="member-register.aspx" runat="server">--%>
             <table>
                 <tr>
                     <th>名前</th>
@@ -48,7 +97,7 @@
                 <tr>
                     <th>生年月日</th>
                     <td>
-                        <input type="date" name="birth-start" value="" min="1950-01-01" max="2025-12-31">
+                        <input type="date" name="birthday" value="" min="1950-01-01" max="2025-12-31">
                     </td>
                 </tr>
                 <tr>
@@ -118,12 +167,14 @@
                 <tr>
                     <td colspan="4">
                         <div class="button-box">
-                            <asp:Button ID="SubmitButton" class="submit-button" runat="server" Text="登録" OnClick="SubmitButton_Click" />
+                            <button class="register-button" onclick="registerButtonClicked()">登録</button>
+                            <%--<asp:Button ID="SubmitButton" class="submit-button" runat="server" Text="登録" OnClick="SubmitButton_Click" />--%>
                             <%--<input type="submit" value="登録" />--%>
                         </div>
                     </td>
                 </tr>
             </table>
-        </form>
+            </div>
+<%--        </form>--%>
     </main>
 </body>
