@@ -262,21 +262,25 @@
 
                         // 編集、削除ボタンを作成する
                         // 編集ボタン
-                        var a = document.createElement('a');
-                        a.className = "link-button edit-button";
-                        a.href = "member-edit.aspx?id=1";
-                        a.appendChild(document.createTextNode('編集'));
+                        var editBtn = document.createElement('input');
+                        editBtn.className = "link-button edit-button";
+                        editBtn.type = "button";
+                        //editBtn.href = "member-edit.aspx?id=" + arrayRow[0];
+                        editBtn.setAttribute('onclick', "editBtnClicked(" + (i + 1) + ")");
+                        //editBtn.onclick = "editBtnClicked(" + i + ")";
+                        editBtn.value = "編集";
 
                         // 削除ボタン
-                        var input = document.createElement('input');
-                        input.className = "delete-button";
-                        input.type = "button";
-                        input.onclick = "deleteConfirmOpen(1)";
-                        input.value = "削除";
+                        var deleteBtn = document.createElement('input');
+                        deleteBtn.className = "delete-button";
+                        deleteBtn.type = "button";
+                        deleteBtn.setAttribute('onclick', "deleteConfirmOpen(1)");
+                        //deleteBtn.onclick = "deleteConfirmOpen(1)";
+                        deleteBtn.value = "削除";
 
                         // 編集、削除ボタンをtr要素に追加する
-                        div.appendChild(a);
-                        div.appendChild(input);
+                        div.appendChild(editBtn);
+                        div.appendChild(deleteBtn);
 
                         td.appendChild(div);
 
@@ -290,6 +294,14 @@
                     alert("失敗: " + result.status);
                 }
             });
+        }
+
+        function editBtnClicked(rowNum) {
+            var table = document.getElementById('search-result');
+
+            var id = table.rows[rowNum].cells[0].innerText;
+
+            window.location.href = "member-edit.aspx?id=" + id;
         }
 
         
