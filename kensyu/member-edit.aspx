@@ -148,7 +148,9 @@
                     "membershipStatusStr": membershipStatusValue
                 }),
                 success: function (data) {
-                    alert("更新成功");
+                    if (!alert("更新成功")) {
+                        window.history.back();
+                    }
                 },
                 error: function (result) {
                     alert("更新失敗");

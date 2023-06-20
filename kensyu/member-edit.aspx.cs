@@ -112,17 +112,6 @@ namespace kensyu
 
                     StringBuilder sb = new StringBuilder();
 
-                    // UPDATE M_Customer
-                    //    SET name = '桜井 千佳',
-                    //        name_kana = 'さくらい ちか',
-                    //        mail = 'c.sakurai@solidseed.co.jp',
-                    //        birthday = '2000-10-31',
-                    //        gender = 1,
-                    //        prefecture_id = 26,
-                    //        membership_status = 1,
-                    //        updated_at = CURRENT_TIMESTAMP
-                    //  WHERE id = 11;
-
                     sb.Append(@"UPDATE M_Customer");
                     sb.Append(@"   SET name = @name,");
                     sb.Append(@"       name_kana = @nameKana,");
