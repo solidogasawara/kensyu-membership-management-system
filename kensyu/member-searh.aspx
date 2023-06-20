@@ -8,7 +8,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
      <!-- 追加：deleteConfirmOpen(id) 関数を定義 -->
     <script type="text/javascript">
-        function deleteConfirmOpen(id) {
+        function deleteConfirmOpen(rowNum) {
+            var table = document.getElementById('search-result');
+
+            var id = table.rows[rowNum].cells[0].innerText;
+
             const modalBackgroundObj = document.querySelector('#modal-background');
             modalBackgroundObj.style.display = 'block';
     
@@ -274,7 +278,7 @@
                         var deleteBtn = document.createElement('input');
                         deleteBtn.className = "delete-button";
                         deleteBtn.type = "button";
-                        deleteBtn.setAttribute('onclick', "deleteConfirmOpen(1)");
+                        deleteBtn.setAttribute('onclick', "deleteConfirmOpen(" + (i + 1) + ")");
                         //deleteBtn.onclick = "deleteConfirmOpen(1)";
                         deleteBtn.value = "削除";
 
@@ -304,23 +308,41 @@
             window.location.href = "member-edit.aspx?id=" + id;
         }
 
+        function deleteBtnClicked() {
+            var id = document.getElementById('modal-member-delete-id').value;
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-searh.aspx/DeleteButton_Click") %>',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "idStr": id,
+                }),
+                success: function (data) {
+                    alert("削除しました");
+                },
+                error: function (result) {
+                    alert("失敗: " + result.status);
+                }
+            });
+
+        }
+
         
     </script>
     <script type="text/javascript" src="./js/common.js" defer></script>
 </head>
   <body>
      <%--<form method="get" action="member-searh.aspx" runat="server">
-     <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
+     <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>--%>
     <div id="modal-delete-confirm-window">
         <p>削除しますか？</p>
-        <%--<form method="post" action="">
-            <div class="button-box">
-                <input class="yes" type="submit" value="はい" />
-                <input class="no" type="button" value="いいえ" onclikc="deleteConfirmClose()" />
-            </div>
-            <input id="modal-member-delete-id" type="hidden" name="id" value="" />
-        </form>--%>
-    <%--</div>--%>
+        <div class="button-box">
+            <input class="yes" type="submit" value="はい" onclick="deleteBtnClicked();" />
+            <input class="no" type="button" value="いいえ" />
+        </div>
+        <input id="modal-member-delete-id" type="hidden" name="id" value="" />
+    </div>
     <div id="modal-background"></div>
     <header>
         <h1>会員管理システム</h1>

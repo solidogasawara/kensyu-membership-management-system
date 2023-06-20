@@ -240,6 +240,53 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
+        public static void DeleteButton_Click(string idStr)
+        {
+            int id = Convert.ToInt32(idStr);
+
+            string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    SqlCommand command = new SqlCommand();
+
+                    string query = @"DELETE FROM M_Customer WHERE id = @id";
+
+                    command.Parameters.Add(new SqlParameter("@id", id));
+
+                    command.CommandText = query;
+                    command.Connection = connection;
+
+                    connection.Open();
+
+                    using (SqlTransaction transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            command.Transaction = transaction;
+                            command.ExecuteNonQuery();
+
+                            transaction.Commit();
+                        }
+                        catch (Exception e)
+                        {
+                            transaction.Rollback();
+                            Debug.WriteLine(e.ToString());
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                }
+
+            }
+
+        }
+
+        [System.Web.Services.WebMethod]
         public static string SortTable(List<List<string>> tableData, string columnName, string sortMethod)
         {
             Debug.WriteLine(columnName);
