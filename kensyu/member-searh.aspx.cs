@@ -228,6 +228,8 @@ namespace kensyu
                     tableData.Add(row);
                 }
 
+                reader.Close();
+
                 JavaScriptSerializer js = new JavaScriptSerializer();
 
                 // Listをjsonの形にする

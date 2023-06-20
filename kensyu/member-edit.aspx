@@ -1,11 +1,160 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="member-edit.aspx.cs" Inherits="kensyu.membersearh" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="member-edit.aspx.cs" Inherits="kensyu.memberedit" %>
 <!DOCTYPE html>
 <html>
 <head>
     <title>会員編集 | 会員管理システム</title>
     <link rel="stylesheet" href="./css/common.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
-        //javascript
+        window.onload = function () {
+            setCustomerData();
+        }
+
+        function setCustomerData() {
+            // URLを取得
+            var url = new URL(window.location.href);
+            var params = url.searchParams;
+
+            var idStr = params.get('id');
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-edit.aspx/GetCustomerInfoById") %>',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "idStr": idStr,
+                }),
+                success: function (data) {
+                    var customerData = JSON.parse(data.d);
+
+                    var name = customerData[0];
+                    var nameKana = customerData[1];
+
+                    var splitedName = name.split(' ');
+                    var splitedNameKana = nameKana.split(' ');
+
+                    var lastNameStr = splitedName[0];
+                    var firstNameStr = splitedName[1];
+
+                    var lastNameKanaStr = splitedNameKana[0];
+                    var firstNameKanaStr = splitedNameKana[1];
+
+                    var emailStr = customerData[2];
+                    var birthdayStr = customerData[3];
+                    var genderStr = customerData[4];
+                    var prefectureStr = customerData[5];
+                    var membershipStatusStr = customerData[6];
+
+                    var id = document.getElementById('id');
+
+                    var lastName = document.getElementsByName('last_name')[0];
+                    var firstName = document.getElementsByName('first_name')[0];
+
+                    var lastNameKana = document.getElementsByName('last_name_kana')[0];
+                    var firstNameKana = document.getElementsByName('first_name_kana')[0];
+
+                    var email = document.getElementsByName('email')[0];
+                    var birthday = document.getElementsByName('birthday')[0];
+                    var gender = document.getElementsByName('sex');
+                    var prefecture = document.getElementsByName('prefecture')[0];
+                    var membershipStatus = document.getElementsByName('member-status');
+
+                    id.innerHTML = idStr;
+
+                    lastName.value = lastNameStr;
+                    firstName.value = firstNameStr;
+
+                    lastNameKana.value = lastNameKanaStr;
+                    firstNameKana.value = firstNameKanaStr;
+
+                    email.value = emailStr;
+                    birthday.value = birthdayStr;
+
+                    for (var i = 0; i < gender.length; i++) {
+                        if (gender[i].value == genderStr) {
+                            gender[i].checked = true;
+                            break;
+                        }
+                    }
+
+                    var prefectureOptions = prefecture.options;
+
+                    for (var i = 0; i < prefectureOptions.length; i++) {
+                        if (prefectureOptions[i].value == prefectureStr) {
+                            prefectureOptions[i].selected = true;
+                            break;
+                        }
+                    }
+
+                    for (var i = 0; i < membershipStatus.length; i++) {
+                        if (membershipStatus[i].value == membershipStatusStr) {
+                            membershipStatus[i].checked = true;
+                            break;
+                        }
+                    }
+                },
+                error: function (result) {
+                    alert("データのロードに失敗しました");
+                }
+            });
+        }
+
+        function editBtnClicked() {
+            var id = document.getElementById('id').innerText;
+
+            var lastName = document.getElementsByName('last_name')[0].value;
+            var firstName = document.getElementsByName('first_name')[0].value;
+
+            var lastNameKana = document.getElementsByName('last_name_kana')[0].value;
+            var firstNameKana = document.getElementsByName('first_name_kana')[0].value;
+
+            var email = document.getElementsByName('email')[0].value;
+            var birthday = document.getElementsByName('birthday')[0].value;
+            var gender = document.getElementsByName('sex');
+            var prefecture = document.getElementsByName('prefecture')[0].value;
+            var membershipStatus = document.getElementsByName('member-status');
+
+            var genderValue = "";
+            var membershipStatusValue = "";
+
+            for (var i = 0; i < gender.length; i++) {
+                if (gender[i].checked) {
+                    genderValue = gender[i].value;
+                    break;
+                }
+            }
+
+            for (var i = 0; i < membershipStatus.length; i++) {
+                if (membershipStatus[i].checked) {
+                    membershipStatusValue = membershipStatus[i].value;
+                    break;
+                }
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-edit.aspx/UpdateCustomerInfo") %>',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "idStr": id,
+                    "lastNameStr": lastName,
+                    "firstNameStr": firstName,
+                    "lastNameKanaStr": lastNameKana,
+                    "firstNameKanaStr": firstNameKana,
+                    "emailStr": email,
+                    "birthdayStr": birthday,
+                    "genderStr": genderValue,
+                    "prefectureStr": prefecture,
+                    "membershipStatusStr": membershipStatusValue
+                }),
+                success: function (data) {
+                    alert("更新成功");
+                },
+                error: function (result) {
+                    alert("更新失敗");
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -24,7 +173,7 @@
             <table>
                 <tr>
                     <th>ID</th>
-                    <td>1</td>
+                    <td id="id"></td>
                 </tr>
                 <tr>
                     <th>名前</th>
@@ -53,14 +202,14 @@
                 <tr>
                     <th>生年月日</th>
                     <td>
-                        <input type="date" name="birth-start" value="1990-03-01" min="1950-01-01" max="2025-12-31">
+                        <input type="date" name="birthday" value="1990-03-01" min="1950-01-01" max="2025-12-31">
                     </td>
                 </tr>
                 <tr>
                     <th>性別</th>
                     <td>
                         <div class="input-check-list">
-                            <label><input type="radio" name="sex" value="1" checked>男性</label>
+                            <label><input type="radio" name="sex" value="1">男性</label>
                             <label><input type="radio" name="sex" value="2">女性</label>
                         </div>
                     </td>
@@ -82,7 +231,7 @@
                             <option value="10">群馬県</option>
                             <option value="11">埼玉県</option>
                             <option value="12">千葉県</option>
-                            <option value="13" selected>東京都</option>
+                            <option value="13">東京都</option>
                             <option value="14">神奈川県</option>
                             <option value="15">新潟県</option>
                             <option value="16">富山県</option>
@@ -124,7 +273,7 @@
                     <th>会員状態</th>
                     <td>
                         <div class="input-check-list">
-                            <label><input type="radio" name="member-status" value="1" checked>有効</label>
+                            <label><input type="radio" name="member-status" value="1">有効</label>
                             <label><input type="radio" name="member-status" value="2">退会</label>
                         </div>
                     </td>
@@ -132,7 +281,7 @@
                 <tr>
                     <td colspan="4">
                         <div class="button-box">
-                            <input class="edit-button" type="submit" value="編集" />
+                            <input class="edit-button" type="submit" onclick="editBtnClicked()" value="編集" />
                         </div>
                     </td>
                 </tr>

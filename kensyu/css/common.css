@@ -241,6 +241,11 @@ main .search-form .search-button{
     max-width: 100%;
 }
 
+main .input-form .register-button {
+    width: 200px;
+    max-width: 100%;
+}
+
 main .search-list td{
     text-align: center;
 }
