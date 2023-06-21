@@ -157,12 +157,13 @@ namespace kensyu
                 sb.Append(@"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c");
                 sb.Append(@"  JOIN M_Prefecture AS p");
                 sb.Append(@"    ON c.prefecture_id = p.id");
+                sb.Append(@" WHERE delete_flag = 'FALSE'");
 
                 // 全件表示フラグがfalseの時だけ、検索条件を追加していく
                 if (!dispAll)
                 {
                     // 検索条件(id)
-                    sb.Append(@" WHERE c.id = @id");
+                    sb.Append(@"   AND (c.id = @id");
                     command.Parameters.Add(new SqlParameter("@id", id));
 
                     // nameの中身が空なら検索条件にnameを含めない
@@ -209,6 +210,8 @@ namespace kensyu
                         sb.Append(@"    OR membership_status = @membershipStatus");
                         command.Parameters.Add(new SqlParameter("@membershipStatus", membershipStatus));
                     }
+
+                    sb.Append(@")");
                 }
 
                 // 作成したsqlをstring型にする
@@ -285,7 +288,7 @@ namespace kensyu
                 {
                     SqlCommand command = new SqlCommand();
 
-                    string query = @"DELETE FROM M_Customer WHERE id = @id";
+                    string query = @"UPDATE M_Customer SET delete_flag = 1 WHERE id = @id";
 
                     command.Parameters.Add(new SqlParameter("@id", id));
 

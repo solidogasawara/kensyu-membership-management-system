@@ -364,7 +364,7 @@
                     var year = date.getFullYear();
                     var month = ("00" + (date.getMonth()+1)).slice(-2);
                     var day = ("00" + (date.getDate())).slice(-2);
-                    var fileName = year + month + day + "会員検索結果.csv";
+                    var fileName = year + month + day + "_" + "会員検索結果.csv";
 
                     var link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
