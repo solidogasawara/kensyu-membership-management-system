@@ -6,6 +6,7 @@
     <title>会員一覧 | 会員管理システム</title>
     <link rel="stylesheet" href="./css/common.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js" integrity="sha512-AhAMtLXTbhq+dyODjwnLcSlytykROxgUhR+gDZmRavVCNj6Gjta5l+8TqGAyLZiNsvJhh3J83ElyhU+5dS2OZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
      <!-- 追加：deleteConfirmOpen(id) 関数を定義 -->
     <script type="text/javascript">
         function deleteConfirmOpen(rowNum) {
@@ -146,79 +147,9 @@
         }
 
         function searchButtonClicked() {
-            // 入力された情報を取得する
-            console.log(document.id);
-            var id = document.getElementsByName('id')[0].value; // id
-            var email = document.getElementsByName('email')[0].value; // メールアドレス
-            var name = document.getElementsByName('name')[0].value; // 名前(漢字)
-            var nameKana = document.getElementsByName('name_kana')[0].value; // 名前(かな)
-            var birthStart = document.getElementsByName('birth-start')[0].value; // 誕生日(始め)
-            var birthEnd = document.getElementsByName('birth-end')[0].value; // 誕生日(終わり)
-            var prefecture = document.getElementsByName('prefecture')[0].value; // 都道府県
-            var gender = document.getElementsByName('sex[]'); // 性別
-            var memberStatus = document.getElementsByName('member-status[]'); // 会員状態
-
-            console.log(gender);
-            console.log(memberStatus);
-
-            var genderValue = "";
-            var memberStatusValue = "";
-
-            var genderCBoxChecked = [false, false];
-            var memberStatusCBoxChecked = [false, false];
-
-            for (var i = 0; i < gender.length; i++) {
-                if (gender[i].checked) {
-                    genderCBoxChecked[i] = true;
-                }
-            }
-
-            if (genderCBoxChecked[0] && genderCBoxChecked[1]) {
-                genderValue = "both";
-            } else {
-                if (genderCBoxChecked[0]) {
-                    genderValue = gender[0].value;
-                }
-                if (genderCBoxChecked[1]) {
-                    genderValue = gender[1].value;
-                }
-            }
-
-            for (var i = 0; i < memberStatus.length; i++) {
-                if (memberStatus[i].checked) {
-                    memberStatusCBoxChecked[i] = true;
-                }
-            }
-
-            if (memberStatusCBoxChecked[0] && memberStatusCBoxChecked[1]) {
-                memberStatusValue = "both";
-            } else {
-                if (memberStatusCBoxChecked[0]) {
-                    memberStatusValue = gender[0].value;
-                }
-                if (memberStatusCBoxChecked[1]) {
-                    memberStatusValue = gender[1].value;
-                }
-            }
-
-            
-
-            $.ajax({
-                type: "POST",
-                url: '<%= ResolveUrl("/member-searh.aspx/SearchButton_Click") %>',
-                contentType: "application/json",
-                data: JSON.stringify({
-                    "idStr": id,
-                    "emailStr": email,
-                    "nameStr": name,
-                    "nameKanaStr": nameKana,
-                    "birthStartStr": birthStart,
-                    "birthEndStr": birthEnd,
-                    "prefectureStr": prefecture,
-                    "genderStr": genderValue,
-                    "memberStatusStr": memberStatusValue
-                }),
-                success: function (data) {
+            searchCustomer(
+                "SearchButton_Click",
+                function (data) {
                     columnNamePrev = "id";
                     desc = false;
                     changeIdSortIndicatior();
@@ -233,6 +164,9 @@
                     var tableHeader = document.getElementById('search-table-header');
                     tableHeader.style.display = '';
 
+                    var csvDownloadBtn = document.getElementById('csv-download-button');
+                    csvDownloadBtn.style.display = '';
+
                     // 既に表示されているテーブルを初期化する
                     // カラムの行は削除しないようにするので、iは1から
                     while (table.rows.length > 1) {
@@ -241,6 +175,7 @@
 
                     if (arrayData.length == 0) {
                         tableHeader.style.display = 'none';
+                        csvDownloadBtn.style.display = 'none';
                         return;
                     }
 
@@ -252,7 +187,7 @@
                         for (var j = 0; j < arrayRow.length; j++) {
                             // td要素の作成
                             var td = document.createElement('td');
-                            
+
                             // td要素に取得した情報を追加する
                             td.appendChild(document.createTextNode(arrayRow[j]));
                             // tr要素にtd要素を追加する
@@ -294,8 +229,85 @@
                         table.appendChild(tr);
                     }
                 },
-                error: function (result) {
+                function (result) {
                     alert("失敗: " + result.status);
+
+                }
+            );
+        }
+
+        function searchCustomer(cSharpMethodName, success, failure) {
+            // 入力された情報を取得する
+            var id = document.getElementsByName('id')[0].value; // id
+            var email = document.getElementsByName('email')[0].value; // メールアドレス
+            var name = document.getElementsByName('name')[0].value; // 名前(漢字)
+            var nameKana = document.getElementsByName('name_kana')[0].value; // 名前(かな)
+            var birthStart = document.getElementsByName('birth-start')[0].value; // 誕生日(始め)
+            var birthEnd = document.getElementsByName('birth-end')[0].value; // 誕生日(終わり)
+            var prefecture = document.getElementsByName('prefecture')[0].value; // 都道府県
+            var gender = document.getElementsByName('sex[]'); // 性別
+            var memberStatus = document.getElementsByName('member-status[]'); // 会員状態
+
+            var genderValue = "";
+            var memberStatusValue = "";
+
+            var genderCBoxChecked = [false, false];
+            var memberStatusCBoxChecked = [false, false];
+
+            for (var i = 0; i < gender.length; i++) {
+                if (gender[i].checked) {
+                    genderCBoxChecked[i] = true;
+                }
+            }
+
+            if (genderCBoxChecked[0] && genderCBoxChecked[1]) {
+                genderValue = "both";
+            } else {
+                if (genderCBoxChecked[0]) {
+                    genderValue = gender[0].value;
+                }
+                if (genderCBoxChecked[1]) {
+                    genderValue = gender[1].value;
+                }
+            }
+
+            for (var i = 0; i < memberStatus.length; i++) {
+                if (memberStatus[i].checked) {
+                    memberStatusCBoxChecked[i] = true;
+                }
+            }
+
+            if (memberStatusCBoxChecked[0] && memberStatusCBoxChecked[1]) {
+                memberStatusValue = "both";
+            } else {
+                if (memberStatusCBoxChecked[0]) {
+                    memberStatusValue = gender[0].value;
+                }
+                if (memberStatusCBoxChecked[1]) {
+                    memberStatusValue = gender[1].value;
+                }
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '<%= ResolveUrl("/member-searh.aspx/") %>' + cSharpMethodName,
+                contentType: "application/json",
+                data: JSON.stringify({
+                    "idStr": id,
+                    "emailStr": email,
+                    "nameStr": name,
+                    "nameKanaStr": nameKana,
+                    "birthStartStr": birthStart,
+                    "birthEndStr": birthEnd,
+                    "prefectureStr": prefecture,
+                    "genderStr": genderValue,
+                    "memberStatusStr": memberStatusValue
+                }),
+                success: function (data) {
+                    success(data)
+                },
+                error: function (result) {
+                    failure(result)
                 }
             });
         }
@@ -326,6 +338,43 @@
                 }
             });
 
+        }
+
+        function csvDownload() {
+            searchCustomer(
+                "CSVDownloadButton_Click",
+                function (data) {
+                    var unicodeCsv = data.d;
+
+                    var unicodeArray = [];
+                    for (var i = 0; i < unicodeCsv.length; i++) {
+                        unicodeArray.push(unicodeCsv.charCodeAt(i));
+                    }
+
+                    var sjisArray = Encoding.convert(unicodeArray, {
+                        to: 'SJIS',
+                        from: 'UNICODE',
+                    });
+
+                    var csv = new Uint8Array(sjisArray);
+
+                    var blob = new Blob([csv], { type: "text/csv" });
+
+                    var date = new Date();
+                    var year = date.getFullYear();
+                    var month = ("00" + (date.getMonth()+1)).slice(-2);
+                    var day = ("00" + (date.getDate())).slice(-2);
+                    var fileName = year + month + day + "会員検索結果.csv";
+
+                    var link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = fileName;
+                    link.click();
+                },
+                function (result) {
+                    alert('csvファイルの生成に失敗しました');
+                }
+            );
         }
 
         
@@ -475,6 +524,12 @@
                 </tr>
             </table>
         <%--</form>--%>
+        <div class="csv-download">
+            <div class="button-box">
+                <button id="csv-download-button" style="display: none;" onclick="csvDownload()">検索結果をCSV形式でダウンロード</button>
+            </div>
+        </div>
+        <br />
         <div class="search-list">
           <table id="search-result">
            <%-- <asp:Repeater id="Repeater1" runat="server">

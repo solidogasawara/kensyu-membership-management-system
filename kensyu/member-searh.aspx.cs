@@ -30,6 +30,18 @@ namespace kensyu
         [System.Web.Services.WebMethod]
         public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
         {
+            List<List<string>> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+
+            JavaScriptSerializer js = new JavaScriptSerializer();
+
+            // Listをjsonの形にする
+            string json = js.Serialize(tableData);
+
+            return json;
+        }
+
+        private static List<List<string>> SearchCustomer(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        {
             // 入力されたパラメータを取得する
 
             // 全件表示フラグ(性別や会員状態のチェックボックスに両方チェックが入った場合全件表示にする)
@@ -208,10 +220,10 @@ namespace kensyu
 
                 connection.Open();
 
-                List<List<string>> tableData = new List<List<string>>();
+                List<List<string>> customerData = new List<List<string>>();
 
                 SqlDataReader reader = command.ExecuteReader();
-                while(reader.Read())
+                while (reader.Read())
                 {
                     //c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status
                     List<string> row = new List<string>();
@@ -221,22 +233,43 @@ namespace kensyu
                     row.Add(reader["name_kana"].ToString());
                     row.Add(reader["mail"].ToString());
                     row.Add(reader["birthday"].ToString());
-                    row.Add((bool) reader["gender"] ? "女性" : "男性");
+                    row.Add((bool)reader["gender"] ? "女性" : "男性");
                     row.Add(reader["prefecture"].ToString());
-                    row.Add((bool) reader["membership_status"] ? "有効" : "退会");
+                    row.Add((bool)reader["membership_status"] ? "有効" : "退会");
 
-                    tableData.Add(row);
+                    customerData.Add(row);
                 }
 
                 reader.Close();
 
-                JavaScriptSerializer js = new JavaScriptSerializer();
-
-                // Listをjsonの形にする
-                string json = js.Serialize(tableData);
-
-                return json;
+                return customerData;
             }
+        }
+
+        [System.Web.Services.WebMethod]
+        public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        {
+            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+
+            return csv;
+        }
+
+        private static string GenerateCustomerDataCSV(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        {
+            List<List<string>> customerData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+
+            StringBuilder sb = new StringBuilder("id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態" + "\r\n");
+
+            foreach (List<string> values in customerData)
+            {
+                string line = string.Join(",", values);
+
+                sb.Append(line + "\r\n");
+            }
+
+            string csv = sb.ToString();
+
+            return csv;
         }
 
         [System.Web.Services.WebMethod]
