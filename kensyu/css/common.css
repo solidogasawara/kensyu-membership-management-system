@@ -156,7 +156,70 @@ label{
     background-color: #d9534f !important;
 }
 
-#modal-background{
+#modal-csvupload-window {
+    margin: 0;
+    padding: 16px 8px;
+    width: 70%;
+    height: 80%;
+    display: none; 
+    background-color: #fff;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    transition: all 0.3s ease-in-out;
+    border-radius: 8px;
+    text-align: center;
+}
+
+#modal-csvupload-window p {
+    margin: 0 0 16px 0;
+    padding: 0;
+    font-size: 2.4rem;
+    text-align: center;
+}
+
+#modal-csvupload-window input {
+    /*     width: 86px; */
+    font-size: 2.0rem;
+}
+
+#modal-csvupload-window .button-box {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+#modal-csvupload-window .modal-csvupload-result {
+    text-align: left;
+    color: green;
+    margin-left: 40px;
+    font-size: 1.5rem;
+}
+
+#modal-delete-confirm-window .yes {
+    background-color: #d9534f !important;
+}
+
+#modal-csvupload-window textarea {
+    width: 80%;
+    height: 45%;
+    color: red;
+}
+
+#modal-csvupload-window h2 {
+    visibility: hidden;
+    margin: 2px;
+}
+
+#modal-csvupload-window .modal-csvupload-result {
+    visibility: hidden;
+}
+
+body .modal-background {
     margin: 0;
     padding: 0;
     width: 100%;

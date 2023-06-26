@@ -276,6 +276,207 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
+        public static string CSVUploadButton_Click(string csv)
+        {
+            List<string> errorMsgs = new List<string>();
+
+            string[] separator = new string[] { "\r\n", "\n" };
+            string[] csvRows = csv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+
+            string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
+
+            string header = "id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態";
+
+            int rowCount = 0;
+
+            foreach (string row in csvRows)
+            {
+                rowCount++;
+
+                if (row == header)
+                {
+                    continue;
+                }
+
+                string[] cols = row.Split(new string[] { "," }, StringSplitOptions.None);
+
+                string idStr = cols[0];
+                int id = -1;
+
+                if(!int.TryParse(idStr, out id))
+                {
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E008_ID_ILLEGAL, rowCount));
+                    continue;
+                }
+
+                string name = cols[1];
+                string nameKana = cols[2];
+                string email = cols[3];
+
+                string birthdayStr = cols[4];
+                DateTime birthday = DateTime.Now;
+
+                if(!DateTime.TryParse(birthdayStr, out birthday))
+                {
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E004_DATETIME_ILLEGAL, rowCount));
+                    continue;
+                }
+
+                string genderStr = cols[5];
+                int gender = -1;
+
+                if(genderStr == "男性")
+                {
+                    gender = 0;
+                } else if (genderStr == "女性")
+                {
+                    gender = 1;
+                } else
+                {
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E005_GENDER_ILLEGAL, rowCount));
+                    continue;
+                }
+
+                string prefectureStr = cols[6];
+                int prefectureId = -1;
+
+                using(SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    try
+                    {
+                        SqlCommand command = new SqlCommand();
+
+                        string query = "SELECT id FROM V_Prefecture WHERE prefecture = @prefecture";
+
+                        command.Parameters.Add(new SqlParameter("@prefecture", prefectureStr));
+
+                        command.CommandText = query;
+                        command.Connection = connection;
+
+                        connection.Open();
+
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        if(reader.Read())
+                        {
+                            prefectureId = (int) reader["id"];
+                        } else
+                        {
+                            errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
+                            continue;
+                        }
+                    } catch(Exception e)
+                    {
+                        Debug.WriteLine(e.ToString());
+                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                        continue;
+                    }
+                }
+
+                DateTime createdAt = DateTime.Now;
+
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    try
+                    {
+                        SqlCommand command = new SqlCommand();
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, created_at)");
+                        sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @createdAt)");
+
+                        command.Parameters.Add(new SqlParameter("@id", id));
+                        command.Parameters.Add(new SqlParameter("@name", name));
+                        command.Parameters.Add(new SqlParameter("@nameKana", nameKana));
+                        command.Parameters.Add(new SqlParameter("@email", email));
+                        command.Parameters.Add(new SqlParameter("@birthday", birthday));
+                        command.Parameters.Add(new SqlParameter("@gender", gender));
+                        command.Parameters.Add(new SqlParameter("@prefectureId", prefectureId));
+                        command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
+
+                        command.CommandText = sb.ToString();
+                        command.Connection = connection;
+
+                        connection.Open();
+
+                        using (SqlTransaction transaction = connection.BeginTransaction())
+                        {
+                            try
+                            {
+                                command.Transaction = transaction;
+                                command.ExecuteNonQuery();
+
+                                transaction.Commit();
+                            }
+                            catch (SqlException e)
+                            {
+                                transaction.Rollback();
+                                Debug.WriteLine(e.ToString());
+
+                                switch(e.Number)
+                                {
+                                    case 8115:
+                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E001_ID_OVERFLOW, rowCount));
+                                        continue;
+                                    case 2628:
+                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E002_STRING_TOOLONG, rowCount));
+                                        continue;
+                                    case 2627:
+                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E003_ID_DUPLICATE, rowCount));
+                                        continue;
+                                    case 109:
+                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E007_NOT_ENOUGH_VALUE, rowCount));
+                                        continue;
+                                    default:
+                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                        continue;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                transaction.Rollback();
+                                Debug.WriteLine(e.ToString());
+
+                                errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                continue;
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.ToString());
+
+                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                        continue;
+                    }
+
+                }
+            }
+
+            CsvInsertResult insertResult = new CsvInsertResult();
+            insertResult.errorMsgs = errorMsgs;
+            insertResult.result = rowCount + "行 エラー: " + errorMsgs.Count + "件";
+
+            JavaScriptSerializer js = new JavaScriptSerializer();
+
+            //StringBuilder errorMsgSb = new StringBuilder();
+            //foreach(string msg in errorMsgs)
+            //{
+            //    errorMsgSb.Append(msg);
+            //}
+
+            //string errorMsg = errorMsgSb.ToString();
+
+            //Debug.WriteLine(errorMsg);
+
+            // Listをjsonの形にする
+            string json = js.Serialize(insertResult);
+
+            // jsonを返す
+            return json;
+        }
+
+        [System.Web.Services.WebMethod]
         public static void DeleteButton_Click(string idStr)
         {
             int id = Convert.ToInt32(idStr);

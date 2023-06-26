@@ -6,9 +6,7 @@
     <link rel="stylesheet" href="./css/common.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
-        window.onload = function () {
-            setCustomerData();
-        }
+        window.onload = setCustomerData();
 
         function setCustomerData() {
             // URLを取得

@@ -14,7 +14,7 @@
 
             var id = table.rows[rowNum].cells[0].innerText;
 
-            const modalBackgroundObj = document.querySelector('#modal-background');
+            const modalBackgroundObj = document.querySelector('.modal-background');
             modalBackgroundObj.style.display = 'block';
     
             const modalWindowObj = document.querySelector('#modal-delete-confirm-window');
@@ -28,6 +28,87 @@
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
             });
+        }
+
+        function csvUploadWindowOpen() {
+            const modalBackgroundObj = document.querySelector('.modal-background');
+            modalBackgroundObj.style.display = 'block';
+    
+            const modalWindowObj = document.querySelector('#modal-csvupload-window');
+            modalWindowObj.style.display = 'block';
+
+            const modalWindowCloseBtn = document.querySelector('.modal-csvupload-close-button');
+            modalWindowCloseBtn.style.display = 'block';
+
+            const modalFileUploadObj = document.getElementById('modal-csvupload-file');
+            modalFileUploadObj.addEventListener('change', onfileUploaded);
+
+            const modalTextarea = document.getElementById('modal-csvupload-textarea');
+
+            const modalDoneObj = document.getElementById('modal-csvupload-done');
+
+            const modalResultObj = document.querySelector('.modal-csvupload-result');
+
+            modalWindowCloseBtn.addEventListener('click', () => {
+                modalBackgroundObj.style.display = 'none';
+                modalWindowObj.style.display = 'none';
+                modalFileUploadObj.value = '';
+                modalTextarea.value = '';
+                modalDoneObj.style.visibility = 'hidden';
+                modalResultObj.innerHTML = '';
+                modalResultObj.style.visibility = 'hidden';
+            });
+        }
+
+        function onfileUploaded(e) {
+            const modalTextarea = document.getElementById('modal-csvupload-textarea');
+
+            console.log(e.target.files.length);
+            var fileData = e.target.files[0];
+
+
+            var reader = new FileReader();
+
+            reader.onerror = function () {
+                modalTextarea.value = "エラー: ファイルの読み込みに失敗しました";
+            }
+
+            reader.onload = function () {
+                var csv = reader.result;
+
+                $.ajax({
+                    type: "POST",
+                    url: '<%= ResolveUrl("/member-searh.aspx/CSVUploadButton_Click") %>',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        "csv": csv
+                    }),
+                    success: function (data) {
+                        var results = JSON.parse(data.d);
+                        var errorMsgs = results["errorMsgs"];
+                        var resultText = results["result"];
+
+                        var errorMsg = "";
+                        for (var i = 0; i < errorMsgs.length; i++) {
+                            errorMsg += errorMsgs[i] + "\n";
+                        }
+
+                        modalTextarea.value = errorMsg;
+
+                        const modalResultObj = document.querySelector('.modal-csvupload-result');
+                        modalResultObj.innerText = resultText;
+                        modalResultObj.style.visibility = 'visible';
+
+                        const modalDoneObj = document.getElementById('modal-csvupload-done');
+                        modalDoneObj.style.visibility = 'visible';
+                    },
+                    error: function (result) {
+                        alert("失敗: " + result.status);
+                    }
+                });
+            }
+
+            reader.readAsText(fileData, 'Shift_JIS');
         }
 
         // 前にクリックされたテーブルのカラム
@@ -164,9 +245,6 @@
                     var tableHeader = document.getElementById('search-table-header');
                     tableHeader.style.display = '';
 
-                    var csvDownloadBtn = document.getElementById('csv-download-button');
-                    csvDownloadBtn.style.display = '';
-
                     // 既に表示されているテーブルを初期化する
                     // カラムの行は削除しないようにするので、iは1から
                     while (table.rows.length > 1) {
@@ -175,7 +253,6 @@
 
                     if (arrayData.length == 0) {
                         tableHeader.style.display = 'none';
-                        csvDownloadBtn.style.display = 'none';
                         return;
                     }
 
@@ -304,10 +381,10 @@
                     "memberStatusStr": memberStatusValue
                 }),
                 success: function (data) {
-                    success(data)
+                    success(data);
                 },
                 error: function (result) {
-                    failure(result)
+                    failure(result);
                 }
             });
         }
@@ -392,7 +469,23 @@
         </div>
         <input id="modal-member-delete-id" type="hidden" name="id" value="" />
     </div>
-    <div id="modal-background"></div>
+    <div class="modal-background"></div>
+
+    <div id="modal-csvupload-window">
+        <p>CSVアップロード</p>
+        <div class="button-box">
+            <input type="file" id="modal-csvupload-file" accept=".csv">
+        </div>
+        <br>
+        <textarea id="modal-csvupload-textarea"></textarea>
+        <h2 id="modal-csvupload-done">挿入処理が完了しました</h2>
+        <p class="modal-csvupload-result">行 エラー: 件</p>
+        <div class="button-box">
+            <input class="modal-csvupload-close-button" type="button" value="閉じる">
+        </div>
+    </div>
+    
+    <div class="modal-background"></div>
     <header>
         <h1>会員管理システム</h1>
         <nav>
@@ -524,9 +617,10 @@
                 </tr>
             </table>
         <%--</form>--%>
-        <div class="csv-download">
+        <div class="csv-download-upload">
             <div class="button-box">
-                <button id="csv-download-button" style="display: none;" onclick="csvDownload()">検索結果をCSV形式でダウンロード</button>
+                <button id="csv-download-button" onclick="csvDownload()">検索結果をCSV形式でダウンロード</button>
+                <button id="csv-upload-button" onclick="csvUploadWindowOpen()">CSVファイルをアップロード</button>
             </div>
         </div>
         <br />
