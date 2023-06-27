@@ -115,9 +115,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="admin-login.aspx" />
+    <Content Include="admin-login-page.aspx" />
     <Content Include="common.js" />
     <Content Include="css\common.css" />
+    <Content Include="css\loginPageStyle.css" />
     <Content Include="csvupload.aspx" />
     <Content Include="member-searh.aspx" />
     <Content Include="member-register.aspx" />
@@ -180,13 +181,14 @@
     <Content Include="Site.Mobile.Master" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="admin-login.aspx.cs">
-      <DependentUpon>admin-login.aspx</DependentUpon>
+    <Compile Include="admin-login-page.aspx.cs">
+      <DependentUpon>admin-login-page.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="admin-login.aspx.designer.cs">
-      <DependentUpon>admin-login.aspx</DependentUpon>
+    <Compile Include="admin-login-page.aspx.designer.cs">
+      <DependentUpon>admin-login-page.aspx</DependentUpon>
     </Compile>
+    <Compile Include="AuthenticationManager.cs" />
     <Compile Include="CsvInsertResult.cs" />
     <Compile Include="csvupload.aspx.cs">
       <DependentUpon>csvupload.aspx</DependentUpon>

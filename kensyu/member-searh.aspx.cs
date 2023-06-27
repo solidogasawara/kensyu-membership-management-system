@@ -23,7 +23,10 @@ namespace kensyu
 
             if (!IsPostBack)
             {
-
+                if(Session["loginId"] == null)
+                {
+                    Response.Redirect("~/admin-login-page.aspx");
+                }
             }
         }
 
