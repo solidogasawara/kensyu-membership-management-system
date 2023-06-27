@@ -27,6 +27,8 @@
                 modalMemberDeleteIdObj.value = '';
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
+
+                searchButtonClicked();
             });
         }
 
@@ -57,6 +59,8 @@
                 modalDoneObj.style.visibility = 'hidden';
                 modalResultObj.innerHTML = '';
                 modalResultObj.style.visibility = 'hidden';
+
+                searchButtonClicked();
             });
         }
 
