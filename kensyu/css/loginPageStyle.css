@@ -1,0 +1,142 @@
+:root{
+    --default-text-color: #333;
+    --default-text-link-color: #428bca;
+    --default-text-link-hover-color: #265279;
+    --default-border-color: #ccc;
+    --header-background-color: #2c3742;
+    --list-head-background-color: #f5f5f5;
+}
+
+html{
+    margin: 0;
+    padding: 0;
+    font-size: 62.5%;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', 'YuGothic', 'MS PGothic', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--default-text-color);
+}
+
+*{
+    box-sizing: border-box;
+}
+
+ul{
+    margin: 0;
+    padding: 0;
+}
+ul li{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+a, a:visited{
+    text-decoration: none;
+    color: #0000ff;
+}
+
+label{
+    cursor: pointer;
+}
+
+select{
+    width: auto;
+}
+
+header{
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    background-color: #000;
+    color: #fff;
+    font-size: 1.6rem;
+}
+header h1{
+    margin: 0 100px 0 0;
+    padding: 0;
+    font-size: 1.6rem;
+}
+header a, header a:visited{
+    color: #fff;
+}
+header nav ul{
+    display: flex;
+    gap: 16px;
+}
+
+main .login-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    text-align: center;
+}
+
+main .login-form h1 {
+    font-size: 3.0rem;
+}
+
+main .login-form th {
+    font-size: 1.5rem;
+}
+
+main .login-form .button-box{
+    padding: 6px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+main .login-form p {
+    font-size: 1.4rem;
+    color: red;
+}
+
+main .login-form th {
+    width: 200px;
+}
+
+main .login-form td {
+    width: 250px;
+}
+
+main .login-form input[type="text"], input[type="password"] {
+    width: 100%;
+}
+
+main .login-form input[type="submit"] {
+    width: 70%;
+}
+
+main .login-form #login-error-msg {
+    visibility: hidden;
+}
+
+    /* input, select, textarea, button{
+    outline: none;
+    border: none;
+    box-sizing: border-box;
+} */
+    input[type="submit"], input[type="button"], button, .link-button {
+        margin: 0;
+        padding: 10px;
+        display: inline-block;
+        color: #fff !important;
+        background-color: #428bca;
+        border-radius: 4px;
+        font-size: 1.2rem;
+        white-space: nowrap;
+        text-align: center;
+        cursor: pointer;
+        text-decoration: none;
+        outline: none;
+        border: none;
+        box-sizing: border-box;
+    }
