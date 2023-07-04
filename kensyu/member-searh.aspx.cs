@@ -255,6 +255,8 @@ namespace kensyu
                     count = Convert.ToInt32(reader["count"]);
                 }
 
+
+
                 reader.Close();
 
                 // 検索結果の件数が取得出来たら、会員データの取得を行う

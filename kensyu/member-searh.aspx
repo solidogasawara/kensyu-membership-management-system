@@ -246,6 +246,23 @@
                 lastPageNumber = maxPageNumber + 1;
             }
 
+            // 「<」ボタンを作成する
+            // ただし、現在表示しているページのページ番号が1なら表示しない
+            if (pageNumber != 1) {
+                const li = document.createElement('li');
+                // 「<」の部分
+                const a = document.createElement('a');
+
+                a.className = 'content';
+                a.href = 'member-searh.aspx?p=' + (pageNumber - 1);
+                a.innerText = '<';
+
+                li.appendChild(a);
+
+                // 「<」をulに追加
+                pagerUlObj.appendChild(li);
+            }
+
             // ページボタンの一番最初のボタンが「1」以外なら「1…」のボタンを表示する
             if (firstPageNumber != 1) {
                 const li = document.createElement('li');
@@ -321,6 +338,23 @@
                 // 「(最大ページ数)」をulに追加
                 pagerUlObj.appendChild(li);
             }
+
+            // 「>」ボタンを作成する
+            // ただし、現在表示しているページのページ番号が最大ページ数なら表示しない
+            if (pageNumber != maxPageNumber) {
+                const li = document.createElement('li');
+                // 「>」の部分
+                const a = document.createElement('a');
+
+                a.className = 'content';
+                a.href = 'member-searh.aspx?p=' + (pageNumber + 1);
+                a.innerText = '>';
+
+                li.appendChild(a);
+
+                // 「>」をulに追加
+                pagerUlObj.appendChild(li);
+            }
         }
 
         // 現在表示しているページのページ番号をURLから取得する
@@ -331,12 +365,15 @@
             const params = url.searchParams;
 
             // クエリパラメータのpの中身は現在表示しているページ番号を表している
-            var pageNumber = params.get('p');
+            var pageNumberStr = params.get('p');
 
             // もしpageNumberがnullなら1ページ目とみなす
-            if (pageNumber == null) {
-                pageNumber = "1";
+            if (pageNumberStr == null) {
+                pageNumberStr = "1";
             }
+
+            // Number型に変換する
+            const pageNumber = Number(pageNumberStr);
 
             return pageNumber;
         }
