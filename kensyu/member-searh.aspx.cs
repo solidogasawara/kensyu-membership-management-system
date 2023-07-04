@@ -37,9 +37,9 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
+        public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
-            Dictionary<string, object> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
+            Dictionary<string, object> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
 
             JavaScriptSerializer js = new JavaScriptSerializer();
 
@@ -49,7 +49,7 @@ namespace kensyu
             return json;
         }
 
-        private static Dictionary<string, object> SearchCustomer(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
+        private static Dictionary<string, object> SearchCustomer(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
             // 入力されたパラメータを取得する
 
@@ -263,11 +263,16 @@ namespace kensyu
                 // SELECT文を変更する
                 sql[0] = @"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c";
 
-                // OFFSET - FETCH文を使用して、取得するデータ数を制限する
-                // これにより検索結果画面でページ分けを行う
-                sql.Add(@"ORDER BY id ");
-                sql.Add(@"OFFSET @offset ROWS");
-                sql.Add(@" FETCH NEXT @nextCount ROWS ONLY");
+                // もしresultAllフラグがfalseなら、取得するデータ数に制限をかける
+                // trueなら制限をかけない
+                if(resultAll == "False")
+                {
+                    // OFFSET - FETCH文を使用して、取得するデータ数を制限する
+                    // これにより検索結果画面でページ分けを行う
+                    sql.Add(@"ORDER BY id ");
+                    sql.Add(@"OFFSET @offset ROWS");
+                    sql.Add(@" FETCH NEXT @nextCount ROWS ONLY");
+                }
 
                 // StringBuilderにAppendした文字列を全て削除する
                 sb.Clear();
@@ -338,37 +343,49 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
+        public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
-            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
+            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
 
             return csv;
         }
 
-        private static string GenerateCustomerDataCSV(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
+        private static string GenerateCustomerDataCSV(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
-            Dictionary<string, object> customerData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
+            // 検索結果を取得
+            Dictionary<string, object> customerData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
 
+            // CSVファイルの内容を追加していくStringBuilder
             StringBuilder sb = new StringBuilder("id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態" + "\r\n");
 
+            // 結果からCustomerクラスを1つずつ取得
             foreach (Customer customer in (List<Customer>) customerData["result"])
             {
+                // Customerクラスのフィールド情報を取得
+                // id, name, nameKana…のように順にFieldInfoが格納されている
                 FieldInfo[] fields = customer.GetType().GetFields();
+                // CSVファイルの1行分のデータを格納するList
                 List<string> values = new List<string>();
 
+                // fieldsを一つずつ取り出して処理をする
+                // GetValueメソッドでフィールドに格納されている中身が取得できる
                 foreach(FieldInfo info in fields)
                 {
                     string value = (string) info.GetValue(customer);
                     values.Add(value);
                 }
 
+                // Listに保存したデータを要素ごとにカンマ区切りにして文字列にする
                 string line = string.Join(",", values);
 
+                // CSVファイルに追加する
                 sb.Append(line + "\r\n");
             }
 
+            // 出来上がったStringBuilderをstringにする
             string csv = sb.ToString();
 
+            // csvを返す
             return csv;
         }
 

@@ -762,7 +762,8 @@
                 function (result) {
                     alert("失敗: " + result.status);
                     
-                }
+                },
+                false
             );
         }
 
@@ -876,7 +877,10 @@
             return querys;
         }
 
-        function searchCustomer(cSharpMethodName, success, failure) {
+        // 会員情報を取得する
+        // 呼び出すC#メソッド名、取得成功時の処理、失敗時の処理、結果を全て取得するかのフラグを引数に取る
+        // resultAllにtrueを渡すと、結果が10件など(1ページに表示させる件数)に制限されず全て返ってくる
+        function searchCustomer(cSharpMethodName, success, failure, resultAll) {
             // ユーザーが入力した検索条件を取得する
             const querys = getSearchQuery();
 
@@ -906,7 +910,8 @@
                     "prefectureStr": prefecture,
                     "genderStr": gender,
                     "memberStatusStr": memberStatus,
-                    "pageNumber": pageNumber
+                    "pageNumber": pageNumber,
+                    "resultAll": resultAll
                 }),
                 success: function (data) {
                     success(data);
@@ -945,7 +950,7 @@
 
         }
 
-        function csvDownload() {
+        function csvDownload(resultAll) {
             searchCustomer(
                 "CSVDownloadButton_Click",
                 function (data) {
@@ -978,7 +983,8 @@
                 },
                 function (result) {
                     alert('csvファイルの生成に失敗しました');
-                }
+                },
+                resultAll
             );
         }
 
@@ -1149,7 +1155,8 @@
         <%--</form>--%>
         <div class="csv-download-upload">
             <div class="button-box">
-                <button id="csv-download-button" onclick="csvDownload()">検索結果をCSV形式でダウンロード</button>
+                <button class="csv-download-button" onclick="csvDownload(false)">このページの検索結果をCSV形式でダウンロード</button>
+                <button class="csv-download-button" onclick="csvDownload(true)">全体の検索結果をCSV形式でダウンロード</button>
                 <button id="csv-upload-button" onclick="csvUploadWindowOpen()">CSVファイルをアップロード</button>
             </div>
         </div>
