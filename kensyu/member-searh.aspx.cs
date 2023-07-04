@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Text;
 using System.Diagnostics;
 using System.Web.Script.Serialization;
+using System.Reflection;
 
 namespace kensyu
 {
@@ -19,10 +20,15 @@ namespace kensyu
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            
-
             if (!IsPostBack)
             {
+                // 何らかの理由で初回ページロード時にセッションが残っていたり、検索画面から別ページに遷移して
+                // 戻ってきたときはセッションを削除して検索条件の復元が行われないようにする
+                if(Session["searchQuery"] != null)
+                {
+                    Session.Remove("searchQuery");
+                }
+
                 if(Session["loginId"] == null)
                 {
                     Response.Redirect("~/admin-login-page.aspx");
@@ -31,9 +37,9 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
         {
-            List<List<string>> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+            Dictionary<string, object> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
 
             JavaScriptSerializer js = new JavaScriptSerializer();
 
@@ -43,7 +49,7 @@ namespace kensyu
             return json;
         }
 
-        private static List<List<string>> SearchCustomer(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        private static Dictionary<string, object> SearchCustomer(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
         {
             // 入力されたパラメータを取得する
 
@@ -149,31 +155,32 @@ namespace kensyu
             }
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
-            //string query = "SELECT * FROM V_Customer";
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 SqlCommand command = new SqlCommand();
 
-                // SQL文を作成する
-                StringBuilder sb = new StringBuilder();
-                sb.Append(@"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c");
-                sb.Append(@"  JOIN M_Prefecture AS p");
-                sb.Append(@"    ON c.prefecture_id = p.id");
-                sb.Append(@" WHERE delete_flag = 'FALSE'");
+                // SQL文を作成するためのListを用意する
+                List<string> sql = new List<string>();
+
+                // 先に、検索結果が何件なのかを取得してその後、会員データを取得する
+                sql.Add(@"SELECT COUNT(*) AS count FROM V_Customer AS c");
+                sql.Add(@"  JOIN M_Prefecture AS p");
+                sql.Add(@"    ON c.prefecture_id = p.id");
+                sql.Add(@" WHERE delete_flag = 'FALSE'");
 
                 // 全件表示フラグがfalseの時だけ、検索条件を追加していく
                 if (!dispAll)
                 {
                     // 検索条件(id)
-                    sb.Append(@"   AND (c.id = @id");
+                    sql.Add(@"   AND (c.id = @id");
                     command.Parameters.Add(new SqlParameter("@id", id));
 
                     // nameの中身が空なら検索条件にnameを含めない
                     if (!String.IsNullOrEmpty(name))
                     {
                         // 検索条件(name)
-                        sb.Append(@"    OR name LIKE @name");
+                        sql.Add(@"    OR name LIKE @name");
                         command.Parameters.Add(new SqlParameter("@name", "%" + name + "%"));
                     }
 
@@ -181,16 +188,16 @@ namespace kensyu
                     if (!String.IsNullOrEmpty(nameKana))
                     {
                         // 検索条件(name_kana)
-                        sb.Append(@"    OR name_kana LIKE @nameKana");
+                        sql.Add(@"    OR name_kana LIKE @nameKana");
                         command.Parameters.Add(new SqlParameter("@nameKana", "%" + nameKana + "%"));
                     }
 
                     // 検索条件(mail)
-                    sb.Append(@"    OR mail = @email");
+                    sql.Add(@"    OR mail = @email");
                     command.Parameters.Add(new SqlParameter("@email", email));
 
                     // 検索条件(birthday)
-                    sb.Append(@"    OR birthday BETWEEN @birthStart AND @birthEnd");
+                    sql.Add(@"    OR birthday BETWEEN @birthStart AND @birthEnd");
                     command.Parameters.Add(new SqlParameter("@birthStart", birthStart));
                     command.Parameters.Add(new SqlParameter("@birthEnd", birthEnd));
 
@@ -198,23 +205,32 @@ namespace kensyu
                     if (!isEmptyGender)
                     {
                         // 検索条件(gender)
-                        sb.Append(@"    OR gender = @gender");
+                        sql.Add(@"    OR gender = @gender");
                         command.Parameters.Add(new SqlParameter("@gender", gender));
                     }
 
                     // 検索条件(prefecture_id)
-                    sb.Append(@"    OR prefecture_id = @prefecture");
+                    sql.Add(@"    OR prefecture_id = @prefecture");
                     command.Parameters.Add(new SqlParameter("@prefecture", prefecture_id));
 
                     // 会員状態のパラメータが空なら検索条件にmembership_statusを含めない
                     if (!isEmptyMembershipStatus)
                     {
                         // 検索条件(membership_status)
-                        sb.Append(@"    OR membership_status = @membershipStatus");
+                        sql.Add(@"    OR membership_status = @membershipStatus");
                         command.Parameters.Add(new SqlParameter("@membershipStatus", membershipStatus));
                     }
 
-                    sb.Append(@")");
+                    sql.Add(@")");
+                }
+
+                //sql.Add(@"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c");
+
+                // ListにAddしたSQL文をStringBuilderを使用して一行の文字列にする
+                StringBuilder sb = new StringBuilder();
+                foreach(string line in sql)
+                {
+                    sb.Append(line);
                 }
 
                 // 作成したsqlをstring型にする
@@ -226,48 +242,124 @@ namespace kensyu
 
                 connection.Open();
 
-                List<List<string>> customerData = new List<List<string>>();
-
+                // SQL文を実行し、結果を得る
+                // 今回は、検索結果が何件かを取得する
                 SqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+
+                // 検索結果の件数
+                int count = -1;
+
+                // 実行結果から、変数に検索結果の件数を代入
+                if (reader.Read())
                 {
-                    //c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status
-                    List<string> row = new List<string>();
-
-                    row.Add(reader["id"].ToString());
-                    row.Add(reader["name"].ToString());
-                    row.Add(reader["name_kana"].ToString());
-                    row.Add(reader["mail"].ToString());
-                    row.Add(reader["birthday"].ToString());
-                    row.Add((bool)reader["gender"] ? "女性" : "男性");
-                    row.Add(reader["prefecture"].ToString());
-                    row.Add((bool)reader["membership_status"] ? "有効" : "退会");
-
-                    customerData.Add(row);
+                    count = Convert.ToInt32(reader["count"]);
                 }
 
                 reader.Close();
+
+                // 検索結果の件数が取得出来たら、会員データの取得を行う
+                // SELECT文を変更する
+                sql[0] = @"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c";
+
+                // OFFSET - FETCH文を使用して、取得するデータ数を制限する
+                // これにより検索結果画面でページ分けを行う
+                sql.Add(@"ORDER BY id ");
+                sql.Add(@"OFFSET @offset ROWS");
+                sql.Add(@" FETCH NEXT @nextCount ROWS ONLY");
+
+                // StringBuilderにAppendした文字列を全て削除する
+                sb.Clear();
+
+                // ListにAddした文字列をStringBuilderにAppendしていく
+                foreach (string line in sql)
+                {
+                    sb.Append(line);
+                }
+
+                // 現在のページ数
+                int page = Convert.ToInt32(pageNumber);
+
+                // 1ページに何件の会員データを表示させるか
+                // 今は、10件にしているが今後検索画面から表示させる件数の変更をできるようにするかもしれない
+                int nextCount = 10;
+
+                // offsetに指定する値は、現在表示しているのが何ページ目なのかで変化させたい
+                // 1ページ目 -> offset = 0, 2ページ目 -> offset = 10
+                // つまり、(ページ番号 - 1) * nextCountを計算してoffsetを出す
+                int offset = (page - 1) * nextCount;
+
+                // offsetとnextCountを設定する
+                command.Parameters.Add(new SqlParameter("@offset", offset));
+                command.Parameters.Add(new SqlParameter("@nextCount", nextCount));
+
+                // クエリ変数の中身を更新し、CommandTextも更新する
+                query = sb.ToString();
+                command.CommandText = query;
+
+                // 最終的に返す、会員データの集まり
+                // CustomerクラスのListと、検索結果の件数が格納される
+                Dictionary<string, object> customerData = new Dictionary<string, object>();
+
+                // customerDataに格納するCustomerクラスのList
+                List<Customer> customers = new List<Customer>();
+
+                // SQL文を実行する
+                // 今回は、結果から会員データを取得する
+                reader = command.ExecuteReader();
+
+                // 結果から会員データをクラスのフィールドに入れていく
+                while (reader.Read())
+                {
+                    Customer customer = new Customer();
+
+                    customer.id = reader["id"].ToString(); // id
+                    customer.name = reader["name"].ToString(); // 名前
+                    customer.nameKana = reader["name_kana"].ToString(); // 名前(かな)
+                    customer.mail = reader["mail"].ToString(); // メールアドレス
+                    customer.birthday = reader["birthday"].ToString(); // 誕生日
+                    customer.gender = (bool)reader["gender"] ? "女性" : "男性"; // 性別
+                    customer.prefecture = reader["prefecture"].ToString(); // 都道府県名
+                    customer.membershipStatus = (bool)reader["membership_status"] ? "有効" : "退会"; // 会員状態
+
+                    // インスタンスをListに追加する
+                    customers.Add(customer);
+                }
+
+                reader.Close();
+
+                // customerDataにCustomerクラスのListと、検索結果の件数を格納する
+                customerData.Add("result", customers);
+                customerData.Add("resultCount", count);
 
                 return customerData;
             }
         }
 
         [System.Web.Services.WebMethod]
-        public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
         {
-            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
 
             return csv;
         }
 
-        private static string GenerateCustomerDataCSV(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr)
+        private static string GenerateCustomerDataCSV(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber)
         {
-            List<List<string>> customerData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr);
+            Dictionary<string, object> customerData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber);
 
             StringBuilder sb = new StringBuilder("id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態" + "\r\n");
 
-            foreach (List<string> values in customerData)
+            foreach (Customer customer in (List<Customer>) customerData["result"])
             {
+                FieldInfo[] fields = customer.GetType().GetFields();
+                List<string> values = new List<string>();
+
+                foreach(FieldInfo info in fields)
+                {
+                    string value = (string) info.GetValue(customer);
+                    values.Add(value);
+                }
+
                 string line = string.Join(",", values);
 
                 sb.Append(line + "\r\n");

@@ -121,7 +121,6 @@
     <Content Include="css\common.css" />
     <Content Include="css\loginPageStyle.css" />
     <Content Include="css\registerPageStyle.css" />
-    <Content Include="csvupload.aspx" />
     <Content Include="member-searh.aspx" />
     <Content Include="member-register.aspx" />
     <Content Include="member-edit.aspx" />
@@ -199,13 +198,7 @@
     </Compile>
     <Compile Include="AuthenticationManager.cs" />
     <Compile Include="CsvInsertResult.cs" />
-    <Compile Include="csvupload.aspx.cs">
-      <DependentUpon>csvupload.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="csvupload.aspx.designer.cs">
-      <DependentUpon>csvupload.aspx</DependentUpon>
-    </Compile>
+    <Compile Include="Customer.cs" />
     <Compile Include="InsertError.cs" />
     <Compile Include="member-searh.aspx.cs">
       <DependentUpon>member-searh.aspx</DependentUpon>
