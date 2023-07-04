@@ -313,6 +313,10 @@ main .input-form .register-button {
     max-width: 100%;
 }
 
+main .input-form p {
+    font-size: 1.6rem;
+}
+
 main .search-list td{
     text-align: center;
 }

@@ -4,54 +4,159 @@
     <title>会員登録 | 会員管理システム</title>
     <link rel="stylesheet" href="./css/common.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Select2.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.2/css/select2.min.css">
+    <!-- Select2本体 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.2/js/select2.min.js"></script>
     <script type="text/javascript">
+        // select2を適用
+        $(document).ready(() => {
+            $('select').select2();
+        });
+
         function registerButtonClicked() {
-            var firstName = document.getElementsByName('first_name')[0].value;
-            var lastName = document.getElementsByName('last_name')[0].value;
-            var firstNameKana = document.getElementsByName('first_name_kana')[0].value;
-            var lastNameKana = document.getElementsByName('last_name_kana')[0].value;
-            var email = document.getElementsByName('email')[0].value;
-            var birthday = document.getElementsByName('birthday')[0].value;
-            var gender = document.getElementsByName('sex');
-            var prefecture = document.getElementsByName('prefecture')[0].value;
+            const firstNameObj = document.querySelector('input[name="first_name"]');
+            const lastNameObj = document.querySelector('input[name="last_name"]');
+            const firstNameKanaObj = document.querySelector('input[name="first_name_kana"]');
+            const lastNameKanaObj = document.querySelector('input[name="last_name_kana"]');
+            const emailObj = document.querySelector('input[name="email"]');
+            const birthdayObj = document.querySelector('input[name="birthday"]');
+            const genderObj = document.querySelectorAll('input[name="sex"]');
+            const prefectureObj = document.querySelector('select[name="prefecture"]');
+
+            const firstName = firstNameObj.value;
+            const lastName = lastNameObj.value;
+            const firstNameKana = firstNameKanaObj.value;
+            const lastNameKana = lastNameKanaObj.value;
+            const email = emailObj.value;
+            const birthday = birthdayObj.value;            
 
             var genderValue = "";
 
             var genderRBtnSelected = [false, false];
-            for (var i = 0; i < gender.length; i++) {
+            for (var i = 0; i < genderObj.length; i++) {
                 genderRBtnSelected[i] = true;
                 break;
             }
 
             if (genderRBtnSelected[0]) {
-                genderValue = gender[0].value;
+                genderValue = genderObj[0].value;
             }
 
             if (genderRBtnSelected[1]) {
-                genderValue = gender[1].value;
+                genderValue = genderObj[1].value;
             }
 
-            $.ajax({
-                type: "POST",
-                url: '<%= ResolveUrl("/member-register.aspx/RegisterButton_Clicked") %>',
-                contentType: "application/json",
-                data: JSON.stringify({
-                    "lastName": lastName,
-                    "firstName": firstName,
-                    "lastNameKana": lastNameKana,
-                    "firstNameKana": firstNameKana,
-                    "email": email,
-                    "birthdayStr": birthday,
-                    "genderStr": genderValue,
-                    "prefecture": prefecture
-                }),
-                success: function (data) {
-                    alert("登録が完了しました");
-                },
-                error: function (result) {
-                    alert("登録に失敗しました");
+            const prefecture = prefectureObj.value;
+
+            // エラーメッセージや登録完了メッセージを表示するp要素
+            const messageObj = document.querySelector('.message');
+
+            // 入力チェック
+            const inputtedData = [
+                firstName, lastName, firstNameKana, lastNameKana,
+                email, birthday, genderValue, prefecture
+            ];
+
+            // 最大文字数
+            const maxNameCharactor = 15; // 名前(漢字)
+            const maxNameKanaCharactor = 50; // 名前(かな)
+            const maxEmailCharactor = 50; // メールアドレス
+
+            // 名前は苗字と名前を半角スペースで区切った形で登録されるため、
+            // その形にして文字数チェックする
+            const name = lastName + " " + firstName;
+            const nameKana = lastNameKana + " " + firstNameKana;
+
+            // 入力欄が空の所があったかどうかを管理するフラグ
+            var isEmpty = false;
+
+            // 最大文字数を超えた入力がされたかを管理するフラグ
+            var exceedsMaxLength = {
+                "name": false,
+                "nameKana": false,
+                "email": false
+            };
+
+            // いずれかの不正な入力があったか
+            var hasInvalidInput = false;
+
+            for (var i = 0; i < inputtedData.length; i++) {
+                // 空文字チェック
+                if (inputtedData[i] == "") {
+                    isEmpty = true;
+                    hasInvalidInput = true;
+                    break;
                 }
-            });
+            }
+
+            // 最大文字数チェック
+            if (name.length > maxNameCharactor) {
+                exceedsMaxLength["name"] = true;
+                hasInvalidInput = true;
+            }
+
+            if (nameKana.length > maxNameKanaCharactor) {
+                exceedsMaxLength["nameKana"] = true;
+                hasInvalidInput = true;
+            }
+
+            if (email.length > maxEmailCharactor) {
+                exceedsMaxLength["email"] = true;
+                hasInvalidInput = true;
+            }
+
+            // 不正な入力がされたなら、登録処理を中断しエラーメッセージを表示する
+            if (hasInvalidInput) {
+                // エラーメッセージの作成
+                var errorMsg = "";
+
+                if (isEmpty) {
+                    errorMsg += "いずれかの入力欄が空です。" + "\n";
+                }
+
+                if (exceedsMaxLength["name"]) {
+                    errorMsg += "名前(漢字)に入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                if (exceedsMaxLength["nameKana"]) {
+                    errorMsg += "名前(かな)に入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                if (exceedsMaxLength["email"]) {
+                    errorMsg += "メールアドレスに入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                // エラーメッセージを表示
+                messageObj.style.color = "red";
+                messageObj.innerText = errorMsg;
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: '<%= ResolveUrl("/member-register.aspx/RegisterButton_Clicked") %>',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        "lastName": lastName,
+                        "firstName": firstName,
+                        "lastNameKana": lastNameKana,
+                        "firstNameKana": firstNameKana,
+                        "email": email,
+                        "birthdayStr": birthday,
+                        "genderStr": genderValue,
+                        "prefecture": prefecture
+                    }),
+                    success: function () {
+                        messageObj.style.color = "green";
+                        messageObj.innerText = "登録に成功しました";
+                    },
+                    error: function () {
+                        messageObj.style.color = "red";
+                        messageObj.innerText = "登録処理に失敗しました";
+                    }
+                });
+            }
+
+            
         }
     </script>
 </head>
@@ -68,7 +173,6 @@
     <main>
         <h2>会員登録</h2>
         <div class="input-form">
-<%--        <form class="input-form" method="post" action="member-register.aspx" runat="server">--%>
             <table>
                 <tr>
                     <th>名前</th>
@@ -168,13 +272,11 @@
                     <td colspan="4">
                         <div class="button-box">
                             <button class="register-button" onclick="registerButtonClicked()">登録</button>
-                            <%--<asp:Button ID="SubmitButton" class="submit-button" runat="server" Text="登録" OnClick="SubmitButton_Click" />--%>
-                            <%--<input type="submit" value="登録" />--%>
                         </div>
                     </td>
                 </tr>
             </table>
+            <p class="message"></p>
             </div>
-<%--        </form>--%>
     </main>
 </body>
