@@ -7,46 +7,53 @@
     <link rel="stylesheet" href="./css/common.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.0.0/encoding.min.js" integrity="sha512-AhAMtLXTbhq+dyODjwnLcSlytykROxgUhR+gDZmRavVCNj6Gjta5l+8TqGAyLZiNsvJhh3J83ElyhU+5dS2OZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Select2.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.2/css/select2.min.css">
+    <!-- Select2本体 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.2/js/select2.min.js"></script>
      <!-- 追加：deleteConfirmOpen(id) 関数を定義 -->
     <script type="text/javascript">
-            // ページがロードされた時に実行される
-            window.onload = function () {
-                // aタグにクリックイベントを設定する
-                // 検索条件を保存するセッションを削除するためのもの
-                $('a').click(function (e) {
-                    e.preventDefault();
+        // ページがロードされた時に実行される
+        window.onload = function () {
+            // aタグにクリックイベントを設定する
+            // 検索条件を保存するセッションを削除するためのもの
+            $('a').click(function (e) {
+                e.preventDefault();
 
-                    // このページの名前を取得する
-                    const thisPagePathName = location.pathname;
+                // このページの名前を取得する
+                const thisPagePathName = location.pathname;
 
-                    // クリックされたaタグに設定されているURL
-                    const url = e.target.href;
+                // クリックされたaタグに設定されているURL
+                const url = e.target.href;
 
-                    // 検索条件を保存するセッションと検索結果件数を保存するセッションの削除を行う
-                    // クリックしたリンクのURLに、このページ名が含まれていた場合は削除を行わない
-                    // (例えば、ページネーションの中のボタンをクリックした場合など)
-                    if (!url.includes(thisPagePathName)) {
-                        sessionStorage.removeItem('searchQuery');
-                        sessionStorage.removeItem('resultCount');
-                    }
-
-                    // ページ遷移を行う
-                    location.href = url;
-                });
-
-                if (sessionStorage.getItem('searchQuery') != null) {
-                    // 検索条件の状態を復元する
-                    restoreSearchQuery();
+                // 検索条件を保存するセッションと検索結果件数を保存するセッションの削除を行う
+                // クリックしたリンクのURLに、このページ名が含まれていた場合は削除を行わない
+                // (例えば、ページネーションの中のボタンをクリックした場合など)
+                if (!url.includes(thisPagePathName)) {
+                    sessionStorage.removeItem('searchQuery');
+                    sessionStorage.removeItem('resultCount');
                 }
 
-                if (sessionStorage.getItem('resultCount') != null) {
-                    // 検索結果を表示する
-                    searchButtonClicked();
+                // ページ遷移を行う
+                location.href = url;
+            });
 
-                    // ページネーションを作成する
-                    createPagination();
-                }
+            if (sessionStorage.getItem('searchQuery') != null) {
+                // 検索条件の状態を復元する
+                restoreSearchQuery();
             }
+
+            if (sessionStorage.getItem('resultCount') != null) {
+                // 検索結果を表示する
+                searchButtonClicked();
+
+                // ページネーションを作成する
+                createPagination();
+            }
+
+            // select2を適用する
+            $('select[name="prefecture"]').select2();
+        }
 
         function restoreSearchQuery() {
             // 保存されたSessionを元に、検索条件の状態を復元する
@@ -148,15 +155,15 @@
             // < 1 2 3 4 5 … 10 >
             // 
             // 5ページ目を表示中の場合
-            //             ⇓
+            //            ⇓
             // < 1 … 3 4 5 6 7 … 10 >
             //
             // 7ページ目を表示中の場合
-            //             ⇓
+            //            ⇓
             // < 1 … 5 6 7 8 9 … 10 >
             //
             // 9ページ目を表示中の場合
-            //               ⇓
+            //              ⇓
             // < 1 … 6 7 8 9 10 >
             //
             // 1と最大ページ数の番号がページネーション内にない場合、…を表示してそれらのページに飛べるようにする
@@ -365,10 +372,14 @@
             modalWindowObj.style.display = 'block';
 
             const modalWindowCloseBtn = document.querySelector('.modal-csvupload-close-button');
-            modalWindowCloseBtn.style.display = 'block';
+
+            const modalWindowUploadBtn = document.querySelector('.modal-csvupload-button');
 
             const modalFileUploadObj = document.getElementById('modal-csvupload-file');
-            modalFileUploadObj.addEventListener('change', onfileUploaded);
+            var csvFile = null;
+            modalFileUploadObj.addEventListener('change', (e) => {
+                csvFile = e.target.files[0];
+            });
 
             const modalTextarea = document.getElementById('modal-csvupload-textarea');
 
@@ -376,6 +387,7 @@
 
             const modalResultObj = document.querySelector('.modal-csvupload-result');
 
+            // 閉じるボタンを押したとき、ウィンドウの表示を隠す
             modalWindowCloseBtn.addEventListener('click', () => {
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
@@ -384,27 +396,49 @@
                 modalDoneObj.style.visibility = 'hidden';
                 modalResultObj.innerHTML = '';
                 modalResultObj.style.visibility = 'hidden';
+            });
 
-                searchButtonClicked();
+            // アップロードボタンを押したとき、データ挿入処理を実行する
+            modalWindowUploadBtn.addEventListener('click', () => {
+                // まだファイルがアップロードされていないなら、ボタンを押しても何の処理も実行しない
+                if (csvFile != null) {
+                    csvUpload(csvFile);
+                }
             });
         }
 
-        function onfileUploaded(e) {
+        function csvUpload(csvFile) {
             const modalTextarea = document.getElementById('modal-csvupload-textarea');
 
-            console.log(e.target.files.length);
-            var fileData = e.target.files[0];
+            // アップロードされたファイルの名前を取得する
+            const fileName = csvFile.name;
 
+            // もし拡張子がcsv以外のファイルがアップロードされた場合、エラーを表示する
+            const pos = fileName.lastIndexOf('.');
+            const extension = fileName.slice(pos + 1);
+
+            if (extension != "csv") {
+                modalTextarea.value = "エラー: csvファイル以外の種類のファイルがアップロードされました";
+                return;
+            }
 
             var reader = new FileReader();
 
+            // FileReaderを使用して、csvファイルを読み込む
+            // デフォルトではUTF-8で読み込もうとしてしまうので、Shift_JISを指定する
+            reader.readAsText(csvFile, 'Shift_JIS');
+
+            // ファイル読み込みに失敗した時
             reader.onerror = function () {
                 modalTextarea.value = "エラー: ファイルの読み込みに失敗しました";
             }
 
+            // ファイル読み込みに成功した時
             reader.onload = function () {
+                // FileReaderで読み取った文字列を変数に格納する
                 var csv = reader.result;
 
+                // ajaxでC#のメソッドを呼び出す
                 $.ajax({
                     type: "POST",
                     url: '<%= ResolveUrl("/member-searh.aspx/CSVUploadButton_Click") %>',
@@ -430,6 +464,9 @@
 
                         const modalDoneObj = document.getElementById('modal-csvupload-done');
                         modalDoneObj.style.visibility = 'visible';
+
+                        // 挿入処理が完了したら、検索結果を更新する
+                        searchButtonClicked();
                     },
                     error: function (result) {
                         alert("失敗: " + result.status);
@@ -437,7 +474,6 @@
                 });
             }
 
-            reader.readAsText(fileData, 'Shift_JIS');
         }
 
         // 前にクリックされたテーブルのカラム
@@ -937,6 +973,7 @@
         <p class="modal-csvupload-result">行 エラー: 件</p>
         <div class="button-box">
             <input class="modal-csvupload-close-button" type="button" value="閉じる">
+            <input class="modal-csvupload-button" type="button" value="アップロード">
         </div>
     </div>
     
@@ -947,6 +984,7 @@
             <ul>
                 <li><a href="member-searh.aspx">会員一覧</a></li>
                 <li><a href="member-register.aspx">会員登録</a></li>
+                <li><a href="admin-register-page.aspx">システム管理者登録</a></li>
             </ul>
         </nav>
     </header>

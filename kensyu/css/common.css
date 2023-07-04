@@ -193,6 +193,10 @@ label{
     gap: 16px;
 }
 
+#modal-csvupload-window .modal-csvupload-close-button {
+    background-color: gray;
+}
+
 #modal-csvupload-window .modal-csvupload-result {
     text-align: left;
     color: green;
