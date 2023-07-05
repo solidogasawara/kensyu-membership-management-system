@@ -45,7 +45,7 @@
 
             if (sessionStorage.getItem('resultCount') != null) {
                 // 検索結果を表示する
-                searchButtonClicked();
+                searchResultUpdate();
 
                 // ページネーションを作成する
                 createPagination();
@@ -397,7 +397,7 @@
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
 
-                searchButtonClicked();
+                searchResultUpdate();
             });
         }
 
@@ -503,7 +503,7 @@
                         modalDoneObj.style.visibility = 'visible';
 
                         // 挿入処理が完了したら、検索結果を更新する
-                        searchButtonClicked();
+                        searchResultUpdate();
                     },
                     error: function (result) {
                         alert("失敗: " + result.status);
@@ -629,7 +629,7 @@
             }
         }
 
-        function searchButtonClicked() {
+        function searchResultUpdate() {
             searchCustomer(
                 "SearchButton_Click",
                 function (data) {
@@ -757,6 +757,20 @@
                 },
                 false
             );
+        }
+
+        function searchButtonClicked() {
+            // ページ番号を1にする
+            // URLを取得
+            const url = new URL(window.location.href);
+            // クエリパラメータを取得
+            const params = url.searchParams;
+
+            params.set('p', '1');
+            history.replaceState("", "", `?${params.toString()}`)
+
+            // 検索する
+            searchResultUpdate();
         }
 
         // 検索条件を入力するテキストボックスやチェックボックスなどの要素を連想配列で取得する
