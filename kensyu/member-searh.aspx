@@ -762,7 +762,7 @@
         // 検索条件を入力するテキストボックスやチェックボックスなどの要素を連想配列で取得する
         // id, メールアドレス, 名前(漢字), 名前(かな), 誕生日(始め), 誕生日(終わり), 都道府県, 性別, 会員状態
         function getSearchQueryElements() {
-            const id = document.querySelector('input[name="id"]'); // id
+            const id = document.querySelector('.search-form input[name="id"]'); // id
             const email = document.querySelector('input[name="email"]'); // メールアドレス
             const name = document.querySelector('input[name="name"]'); // 名前(漢字)
             const nameKana = document.querySelector('input[name="name_kana"]'); // 名前(かな)
