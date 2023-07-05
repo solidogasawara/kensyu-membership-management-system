@@ -5,6 +5,7 @@ using System.Web;
 
 namespace kensyu
 {
+    // CSVファイルから会員情報を登録処理の結果を記録するクラス
     public class CsvInsertResult
     {
         public List<string> errorMsgs { get; set; } = new List<string>();

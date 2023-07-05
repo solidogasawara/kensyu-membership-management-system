@@ -23,8 +23,18 @@
                     "idStr": idStr,
                 }),
                 success: function (data) {
+                    const result = data.d;
+
+                    // データの取得中に例外が発生した場合、"failed"が返ってくる
+                    // アラートでエラーメッセージを表示し、この後の処理を実行しない
+                    if (result == "failed") {
+                        alert('データのロードに失敗しました');
+
+                        return false;
+                    }
+
                     // 取得したJSON形式のデータを配列に変換する
-                    const customerData = JSON.parse(data.d)[0];
+                    const customerData = JSON.parse(result)[0];
 
                     // 取得したデータを変数に格納する
                     const name = customerData["name"];
@@ -95,7 +105,7 @@
                         }
                     }
                 },
-                error: function (result) {
+                error: function () {
                     alert("データのロードに失敗しました");
                 }
             });

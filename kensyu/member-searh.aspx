@@ -179,17 +179,11 @@
             // セッションから検索結果の件数を取得する
             const resultCountStr = sessionStorage.getItem('resultCount');
 
-            console.log(sessionStorage.getItem('searchQuery'));
-
             // Number型に変換する
             const resultCount = Number(resultCountStr);
 
-            console.log(resultCount);
-
             // 最大ページ数を計算する
             const maxPageNumber = Math.ceil(resultCount / maxResultsPerPage);
-
-            console.log("maxPageNumber: " + maxPageNumber);
 
             // ページネーションの長さを2で割り、小数点以下を切り捨てする
             // この変数は後に条件式で使われる
@@ -378,6 +372,7 @@
             return pageNumber;
         }
 
+        // 削除画面
         function deleteConfirmOpen(rowNum) {
             var table = document.getElementById('search-result');
 
@@ -401,6 +396,7 @@
             });
         }
 
+        // csvアップロード画面
         function csvUploadWindowOpen() {
             const modalBackgroundObj = document.querySelector('.modal-background');
             modalBackgroundObj.style.display = 'block';
@@ -633,11 +629,20 @@
             searchCustomer(
                 "SearchButton_Click",
                 function (data) {
+                    const result = data.d;
+
+                    // 処理中にエラーが発生した場合、"failed"が返される
+                    // アラートでエラーメッセージを表示してこの後の処理を実行しない
+                    if (result == "failed") {
+                        alert("検索処理中にエラーが発生しました");
+                        return false;
+                    }
+
                     columnNamePrev = "id";
                     desc = false;
                     changeIdSortIndicatior();
 
-                    const parsedData = JSON.parse(data.d);
+                    const parsedData = JSON.parse(result);
 
                     // DBから取得した情報
                     var arrayData = parsedData["result"];
@@ -682,12 +687,12 @@
                         ];
 
                         // tr要素の作成
-                        var tr = document.createElement('tr');
+                        const tr = document.createElement('tr');
 
                         // tableRowを元に、tr要素の中身の部分を作っていく
                         for (var j = 0; j < tableRow.length; j++) {
                             // td要素の作成
-                            var td = document.createElement('td');
+                            const td = document.createElement('td');
 
                             // td要素に取得した情報を追加する
                             td.appendChild(document.createTextNode(tableRow[j]));
@@ -695,27 +700,24 @@
                             tr.appendChild(td);
                         }
 
-                        var td = document.createElement('td');
+                        const td = document.createElement('td');
 
-                        var div = document.createElement('div');
+                        const div = document.createElement('div');
                         div.className = "button-box";
 
                         // 編集、削除ボタンを作成する
                         // 編集ボタン
-                        var editBtn = document.createElement('input');
+                        const editBtn = document.createElement('input');
                         editBtn.className = "link-button edit-button";
                         editBtn.type = "button";
-                        //editBtn.href = "member-edit.aspx?id=" + arrayRow[0];
                         editBtn.setAttribute('onclick', "editBtnClicked(" + (i + 1) + ")");
-                        //editBtn.onclick = "editBtnClicked(" + i + ")";
                         editBtn.value = "編集";
 
                         // 削除ボタン
-                        var deleteBtn = document.createElement('input');
+                        const deleteBtn = document.createElement('input');
                         deleteBtn.className = "delete-button";
                         deleteBtn.type = "button";
                         deleteBtn.setAttribute('onclick', "deleteConfirmOpen(" + (i + 1) + ")");
-                        //deleteBtn.onclick = "deleteConfirmOpen(1)";
                         deleteBtn.value = "削除";
 
                         // 編集、削除ボタンをtr要素に追加する
@@ -751,9 +753,8 @@
                     // ページネーションの作成
                     createPagination();
                 },
-                function (result) {
-                    alert("失敗: " + result.status);
-                    
+                function () {
+                    alert("検索に失敗しました");
                 },
                 false
             );
@@ -928,16 +929,18 @@
             });
         }
 
+        // 編集ボタンクリック時
         function editBtnClicked(rowNum) {
-            var table = document.getElementById('search-result');
+            const table = document.getElementById('search-result');
 
-            var id = table.rows[rowNum].cells[0].innerText;
+            const id = table.rows[rowNum].cells[0].innerText;
 
             window.location.href = "member-edit.aspx?id=" + id;
         }
 
+        // 削除ボタンクリック時
         function deleteBtnClicked() {
-            var id = document.getElementById('modal-member-delete-id').value;
+            const id = document.getElementById('modal-member-delete-id').value;
 
             $.ajax({
                 type: "POST",
@@ -947,42 +950,70 @@
                     "idStr": id,
                 }),
                 success: function (data) {
-                    alert("削除しました");
+                    const result = data.d;
+
+                    if (result == "success") {
+                        alert("削除しました");
+                    } else if (result == "failed") {
+                        alert("削除に失敗しました");
+                    }
                 },
-                error: function (result) {
-                    alert("失敗: " + result.status);
+                error: function () {
+                    alert("削除に失敗しました");
                 }
             });
-
         }
 
+        // csvダウンロードボタンクリック時
+        // resultAllがtrueなら全ページ分のデータをダウンロードする
+        // falseなら現在表示しているページのデータだけダウンロードする
         function csvDownload(resultAll) {
             searchCustomer(
                 "CSVDownloadButton_Click",
                 function (data) {
-                    var unicodeCsv = data.d;
+                    const result = data.d;
+
+                    // csvファイル生成中に例外が発生した場合、"failed"が返ってくる
+                    // アラートでエラーメッセージを表示し、この後の処理を実行しない
+                    if (result == "failed") {
+                        alert('csvファイルの生成に失敗しました');
+                        return false;
+                    }
+
+                    // csvデータを取得する(文字コードはUnicode)
+                    const unicodeCsv = data.d;
+
+                    // UnicodeだとExcelでcsvファイルを開いた時に文字化けしてしまうので、
+                    // Shift_JISに変換する
 
                     var unicodeArray = [];
+                    // unicodeCsvの内容を1文字ずつ文字コードの数値に変換して格納する
                     for (var i = 0; i < unicodeCsv.length; i++) {
                         unicodeArray.push(unicodeCsv.charCodeAt(i));
                     }
 
-                    var sjisArray = Encoding.convert(unicodeArray, {
+                    // Encodingライブラリを使用して、Shift_JISに変換する
+                    const sjisArray = Encoding.convert(unicodeArray, {
                         to: 'SJIS',
                         from: 'UNICODE',
                     });
 
-                    var csv = new Uint8Array(sjisArray);
+                    // Shift_JISに変換されたsjisArrayをUint8Arrayに変換する
+                    // sjisArrayのままBlobコンストラクタに渡すと、文字ではなく文字コードの数字がそのまま出力されてしまう
+                    const csv = new Uint8Array(sjisArray);
 
-                    var blob = new Blob([csv], { type: "text/csv" });
+                    const blob = new Blob([csv], { type: "text/csv" });
 
-                    var date = new Date();
-                    var year = date.getFullYear();
-                    var month = ("00" + (date.getMonth()+1)).slice(-2);
-                    var day = ("00" + (date.getDate())).slice(-2);
-                    var fileName = year + month + day + "_" + "会員検索結果.csv";
+                    // ファイル名の作成
+                    // 現在日時が先頭に来るようになっている
+                    const date = new Date();
+                    const year = date.getFullYear();
+                    const month = ("00" + (date.getMonth()+1)).slice(-2);
+                    const day = ("00" + (date.getDate())).slice(-2);
+                    const fileName = year + month + day + "_" + "会員検索結果.csv";
 
-                    var link = document.createElement('a');
+                    // ダウンロード処理
+                    const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
                     link.download = fileName;
                     link.click();
@@ -993,14 +1024,11 @@
                 resultAll
             );
         }
-
         
     </script>
     <script type="text/javascript" src="./js/common.js" defer></script>
 </head>
   <body>
-     <%--<form method="get" action="member-searh.aspx" runat="server">
-     <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>--%>
     <div id="modal-delete-confirm-window">
         <p>削除しますか？</p>
         <div class="button-box">
@@ -1039,29 +1067,29 @@
     </header>
     <main>
         <h2>会員一覧</h2>
-        <%--<form class="search-form" method="get" action="member-searh.aspx">--%>
+        
             <table class="search-form">
                 <tr>
                     <th>ID</th>
                     <td>
-                        <%--<asp:TextBox id="id" runat="server" />--%>
+                        
                         <input type="text" name="id" value="" />
                     </td>
                     <th>メールアドレス</th>
                     <td>
-                        <%--<asp:TextBox id="email" runat="server" />--%>
+                        
                         <input type="text" name="email" value="" />
                     </td>
                 </tr>
                 <tr>
                     <th>名前</th>
                     <td>
-                        <%--<asp:TextBox id="name" runat="server" />--%>
+                        
                         <input type="text" name="name" value="" />
                     </td>
                     <th>名前(かな)</th>
                     <td>
-                        <%--<asp:TextBox id="name_kana" runat="server" />--%>
+                        
                         <input type="text" name="name_kana" value="" />
                     </td>
                     
@@ -1070,17 +1098,17 @@
                     <th>生年月日</th>
                     <td>
                         <div class="search-input-date-select-input">
-                            <%--<asp:Calendar id="birth_start" runat="server" minimumValue="1950-01-01" maximumValue="2025-12-31"/>--%>
+                            
                             <input type="date" name="birth-start" value="" min="1950-01-01" max="2025-12-31">
                             <div>～</div>
-                            <%--<asp:Calendar id="birth_end" runat="server" minimumValue="1950-01-01" maximumValue="2025-12-31"/>--%>
+                            
                             <input type="date" name="birth-end" value="" min="1950-01-01" max="2025-12-31">
                         </div>
                     </td>
                     <th>性別</th>
                     <td>
                         <div class="input-check-list">
-                            <%--<label><asp:CheckBox id="sex[]" runat="server" /></label>--%>
+                            
                             <label><input type="checkbox" name="sex[]" value="1">男性</label>
                             <label><input type="checkbox" name="sex[]" value="2">女性</label>
                         </div>
@@ -1151,14 +1179,14 @@
                 <tr>
                     <td colspan="4">
                         <div class="button-box">
-                             <%--<input class="search-button" type="submit" value="検索" />--%> 
-                            <%--<asp:Button ID="SearchButton" class="search-button" runat="server" Text="検索" OnClick="SearchButton_Click" />--%>
+                              
+                            
                             <button class="search-button" onclick="searchButtonClicked();">検索</button>
                         </div>
                     </td>
                 </tr>
             </table>
-        <%--</form>--%>
+        
         <div class="csv-download-upload">
             <div class="button-box">
                 <button class="csv-download-button" onclick="csvDownload(false)">このページの検索結果をCSV形式でダウンロード</button>
@@ -1169,59 +1197,30 @@
         <br />
         <div class="search-list">
           <table id="search-result">
-           <%-- <asp:Repeater id="Repeater1" runat="server">
-                <HeaderTemplate>--%>
-                    <tr id="search-table-header" style="display: none;">
-                        <th onclick="sortTable('id')">
-                            ID 
-                            <div id="idSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: visible;">▲</div>
-                        </th>
-                        <th>名前</th>
-                        <th>名前(かな)</th>
-                        <th>メールアドレス</th>
-                        <th onclick="sortTable('birthday')">
-                            生年月日 
-                            <div id="bdSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: hidden;">▲</div>
-                        </th>
-                        <th>性別</th>
-                        <th>都道府県</th>
-                        <th>会員状態</th>
-                        <th>操作</th>
-                    </tr>
-                <%--</HeaderTemplate>--%>
-
-                <%--<ItemTemplate>
-                    <tr>
-                        <td><%# Eval("id") %></td>
-                        <td><%# Eval("name") %></td>
-                        <td><%# Eval("name_kana") %></td>
-                        <td><%# Eval("mail") %></td>
-                        <td><%# Eval("birthday") %></td>
-                        <td><%# (bool) Eval("gender") ? "女性" : "男性" %></td>
-                        <td><%# Eval("prefecture") %></td>
-                        <td><%# (bool) Eval("membership_status") ? "有効" : "無効" %></td>
-                        <td>
-                            <div class="button-box">
-                                <a class="link-button edit-button" href="member-edit.aspx?id=1">編集</a>
-                                <input class="delete-button" type="button" onclick="deleteConfirmOpen(1)" value="削除" />
-                            </div>
-                        </td>
-                    </tr>
-                </ItemTemplate>
-            </asp:Repeater>--%>
+            <tr id="search-table-header" style="display: none;">
+                <th onclick="sortTable('id')">
+                    ID 
+                    <div id="idSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: visible;">▲</div>
+                </th>
+                <th>名前</th>
+                <th>名前(かな)</th>
+                <th>メールアドレス</th>
+                <th onclick="sortTable('birthday')">
+                    生年月日 
+                    <div id="bdSortToggle" style="color: gray; display: inline-block; _display: inline; visibility: hidden;">▲</div>
+                </th>
+                <th>性別</th>
+                <th>都道府県</th>
+                <th>会員状態</th>
+                <th>操作</th>
+            </tr>
         </table>
         </div>
         <div class="pager">
             <ul>
-                <%--<li>
-                    <span class="content">1</span>
-                </li>
-                <li>
-                    <a class="content" href="member-searh.aspx?p=2">2</a>
-                </li>--%>
             </ul>
         </div>
     </main>
-         <%--</form>--%>
+         
 </body>
 </html>

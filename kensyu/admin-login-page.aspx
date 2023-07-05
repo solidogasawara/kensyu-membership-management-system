@@ -10,20 +10,25 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
         function loginProcess() {
+            // 入力欄の要素を取得する
             const loginInputLoginId = document.getElementById('login-input-loginId');
             const loginInputPassword = document.getElementById('login-input-password');
 
+            // 入力されたログインidとパスワードを取得する
             const inputtedLoginId = loginInputLoginId.value;
             const inputtedPassword = loginInputPassword.value;
 
+            // エラーメッセージを表示する要素
             const loginErrorMsg = document.getElementById('login-error-msg');
             loginErrorMsg.style.visibility = 'visible';
 
+            // 未入力チェック
             if (inputtedLoginId == "" || inputtedPassword == "") {
                 loginErrorMsg.innerText = "ログインIDまたはパスワードが未入力です";
                 return false;
             }
-            
+
+            // ログインidとパスワードをC#側に送信する
             $.ajax({
                 type: "POST",
                 url: '<%= ResolveUrl("/admin-login-page.aspx/LoginProcess") %>',
@@ -39,10 +44,12 @@
                         window.location.href = "member-searh.aspx";
                     } else if (result == "incorrect") {
                         loginErrorMsg.innerText = "ログインIDまたはパスワードが誤っています";
+                    } else if (result == "error") {
+                        loginErrorMsg.innerText = "処理中にエラーが発生しました";
                     }
                 },
-                error: function (result) {
-                    alert("ログイン処理失敗");
+                error: function () {
+                    loginErrorMsg.innerText = "何らかのエラーが発生しました";
                 }
             });
         }

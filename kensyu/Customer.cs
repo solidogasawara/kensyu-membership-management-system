@@ -5,6 +5,7 @@ using System.Web;
 
 namespace kensyu
 {
+    // 会員情報を記録するクラス
     public class Customer
     {
         public string id = string.Empty;

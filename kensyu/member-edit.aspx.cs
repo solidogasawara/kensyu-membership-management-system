@@ -20,6 +20,7 @@ namespace kensyu
         {
             if (!IsPostBack)
             {
+                // まだログインしてないなら、ログイン画面に飛ばす
                 if (Session["loginId"] == null)
                 {
                     Response.Redirect("~/admin-login-page.aspx");
@@ -27,6 +28,7 @@ namespace kensyu
             }
         }
 
+        // idを元に会員情報を返す
         [System.Web.Services.WebMethod]
         public static string GetCustomerInfoById(string idStr)
         {
@@ -36,43 +38,51 @@ namespace kensyu
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                SqlCommand command = new SqlCommand();
-
-                // SQL文
-                string query = @"SELECT name, name_kana, mail, birthday, gender, prefecture_id, membership_status FROM V_Customer WHERE id = @id";
-
-                command.Parameters.Add(new SqlParameter("@id", id));
-
-                // クエリとコネクションを指定する
-                command.CommandText = query;
-                command.Connection = connection;
-
-                connection.Open();
-
                 // SQL文を実行して取得したデータを格納するList
                 List<Customer> customerData = new List<Customer>();
 
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                // 会員情報取得中に例外が発生した場合"failed"を返す
+                try
                 {
-                    Customer customer = new Customer();
+                    SqlCommand command = new SqlCommand();
 
-                    customer.name = reader["name"].ToString();
-                    customer.nameKana = reader["name_kana"].ToString();
-                    customer.mail = reader["mail"].ToString();
+                    // SQL文
+                    string query = @"SELECT name, name_kana, mail, birthday, gender, prefecture_id, membership_status FROM V_Customer WHERE id = @id";
 
-                    DateTime birthday = (DateTime)reader["birthday"];
-                    customer.birthday = birthday.ToString("yyyy-MM-dd");
+                    command.Parameters.Add(new SqlParameter("@id", id));
 
-                    customer.gender = (bool)reader["gender"] ? "2" : "1";
-                    customer.prefecture = reader["prefecture_id"].ToString();
-                    customer.membershipStatus = (bool)reader["membership_status"] ? "1" : "2";
+                    // クエリとコネクションを指定する
+                    command.CommandText = query;
+                    command.Connection = connection;
 
-                    customerData.Add(customer);
+                    connection.Open();
+
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        Customer customer = new Customer();
+
+                        customer.name = reader["name"].ToString();
+                        customer.nameKana = reader["name_kana"].ToString();
+                        customer.mail = reader["mail"].ToString();
+
+                        DateTime birthday = (DateTime)reader["birthday"];
+                        customer.birthday = birthday.ToString("yyyy-MM-dd");
+
+                        customer.gender = (bool)reader["gender"] ? "2" : "1";
+                        customer.prefecture = reader["prefecture_id"].ToString();
+                        customer.membershipStatus = (bool)reader["membership_status"] ? "1" : "2";
+
+                        customerData.Add(customer);
+                    }
+                    reader.Close();
+                } catch(Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+
+                    return "failed";
                 }
-
-                reader.Close();
 
                 JavaScriptSerializer js = new JavaScriptSerializer();
 
@@ -83,6 +93,7 @@ namespace kensyu
             }
         }
 
+        // 会員情報を更新する処理
         [System.Web.Services.WebMethod]
         public static string UpdateCustomerInfo(string idStr, string lastNameStr, string firstNameStr, string lastNameKanaStr, string firstNameKanaStr, string emailStr, string birthdayStr, string genderStr, string prefectureStr, string membershipStatusStr)
         {
@@ -113,6 +124,9 @@ namespace kensyu
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
+            // 更新処理開始
+            // 更新時にSQL関連の例外が発生した場合、"update failed"を、それ以外の例外が発生した場合、"unexpected error"を、
+            // 成功したなら"success"を返す
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 try
@@ -175,7 +189,6 @@ namespace kensyu
 
                     return "unexpected error";
                 }
-
             }
         }
     }

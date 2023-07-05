@@ -15,6 +15,7 @@
         });
 
         function registerButtonClicked() {
+            // 入力欄の要素を取得する
             const firstNameObj = document.querySelector('input[name="first_name"]');
             const lastNameObj = document.querySelector('input[name="last_name"]');
             const firstNameKanaObj = document.querySelector('input[name="first_name_kana"]');
@@ -24,6 +25,7 @@
             const genderObj = document.querySelectorAll('input[name="sex"]');
             const prefectureObj = document.querySelector('select[name="prefecture"]');
 
+            // 要素から入力された文字列を取得する
             const firstName = firstNameObj.value;
             const lastName = lastNameObj.value;
             const firstNameKana = firstNameKanaObj.value;
@@ -145,9 +147,16 @@
                         "genderStr": genderValue,
                         "prefecture": prefecture
                     }),
-                    success: function () {
-                        messageObj.style.color = "green";
-                        messageObj.innerText = "登録に成功しました";
+                    success: function (data) {
+                        const result = data.d;
+
+                        if (result == "success") {
+                            messageObj.style.color = "green";
+                            messageObj.innerText = "登録に成功しました";
+                        } else if (result == "failed") {
+                            messageObj.style.color = "red";
+                            messageObj.innerText = "登録処理に失敗しました";
+                        }
                     },
                     error: function () {
                         messageObj.style.color = "red";
@@ -155,8 +164,6 @@
                     }
                 });
             }
-
-            
         }
     </script>
 </head>

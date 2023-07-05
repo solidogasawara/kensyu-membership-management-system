@@ -19,6 +19,7 @@ namespace kensyu
         {
             if (!IsPostBack)
             {
+                // まだログインしてないなら、ログイン画面に飛ばす
                 if (Session["loginId"] == null)
                 {
                     Response.Redirect("~/admin-login-page.aspx");
@@ -27,9 +28,11 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static void RegisterButton_Clicked(string lastName, string firstName, string lastNameKana, string firstNameKana, string email, string birthdayStr, string genderStr, string prefecture)
+        public static string RegisterButton_Clicked(string lastName, string firstName, string lastNameKana, string firstNameKana, string email, string birthdayStr, string genderStr, string prefecture)
         {
+            // 名前(漢字)
             string name = lastName + " " + firstName;
+            // 名前(かな)
             string nameKana = lastNameKana + " " + firstNameKana;
             DateTime birthday = DateTime.Parse(birthdayStr);
             bool gender = false;
@@ -39,28 +42,42 @@ namespace kensyu
                 gender = true;
             }
 
+            // 登録日
             DateTime createdAt = DateTime.Now;
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
+            // idを連番にするために、データ数を取得する
             int count = 0;
 
+            // データ数取得
+            // 何らかの理由で取得に失敗した場合"failed"を返す
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string query = "SELECT COUNT(*) AS count FROM M_Customer";
-                SqlCommand command = new SqlCommand(query, connection);
-
-                connection.Open();
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                if(reader.Read())
+                try
                 {
-                    string countStr = reader["count"].ToString();
-                    count = Convert.ToInt32(countStr);
+                    string query = "SELECT COUNT(*) AS count FROM M_Customer";
+                    SqlCommand command = new SqlCommand(query, connection);
+
+                    connection.Open();
+
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        string countStr = reader["count"].ToString();
+                        count = Convert.ToInt32(countStr);
+                    }
+                } catch(Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+
+                    return "failed";
                 }
             }
 
+            // 登録処理実行
+            // 処理中に何らかの例外が発生した場合"failed"を、処理成功なら"success"を返す
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 try
@@ -71,6 +88,7 @@ namespace kensyu
                     sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, created_at)");
                     sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefecture, @createdAt)");
 
+                    // 連番にするためcountに1を足す
                     command.Parameters.Add(new SqlParameter("@id", count + 1));
                     command.Parameters.Add(new SqlParameter("@name", name));
                     command.Parameters.Add(new SqlParameter("@nameKana", nameKana));
@@ -85,6 +103,7 @@ namespace kensyu
 
                     connection.Open();
 
+                    // 例外発生時、登録処理をキャンセルする
                     using (SqlTransaction transaction = connection.BeginTransaction())
                     {
                         try
@@ -93,27 +112,23 @@ namespace kensyu
                             command.ExecuteNonQuery();
 
                             transaction.Commit();
+
+                            return "success";
                         } catch(Exception e)
                         {
                             transaction.Rollback();
                             Debug.WriteLine(e.ToString());
+
+                            return "failed";
                         }
                     }
                 } catch(Exception e)
                 {
                     Debug.WriteLine(e.ToString());
-                }   
-                    
+
+                    return "failed";
+                }     
             }
-            
-            
-
-                
-
-//            INSERT INTO M_Customer(id, name, name_kana, mail, birthday, gender, prefecture_id, created_at, updated_at)
-//VALUES(11, '田中 太郎', 'たなか たろう', 't.tanaka@solidseed.co.jp', '1900-01-01', 0, 4, '2023-06-13', NULL)
-
-
         }
     }
 }

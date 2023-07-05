@@ -22,13 +22,7 @@ namespace kensyu
         {
             if (!IsPostBack)
             {
-                // 何らかの理由で初回ページロード時にセッションが残っていたり、検索画面から別ページに遷移して
-                // 戻ってきたときはセッションを削除して検索条件の復元が行われないようにする
-                if(Session["searchQuery"] != null)
-                {
-                    Session.Remove("searchQuery");
-                }
-
+                // まだログインしてないならログイン画面に飛ばす
                 if(Session["loginId"] == null)
                 {
                     Response.Redirect("~/admin-login-page.aspx");
@@ -39,7 +33,20 @@ namespace kensyu
         [System.Web.Services.WebMethod]
         public static string SearchButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
-            Dictionary<string, object> tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
+            // 検索結果を格納するList
+            Dictionary<string, object> tableData = null;
+
+            // 検索結果取得処理で例外が発生した場合、"failed"を返す
+            try
+            {
+                // 検索結果を取得する
+                tableData = SearchCustomer(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
+            } catch(Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+
+                return "failed";
+            }
 
             JavaScriptSerializer js = new JavaScriptSerializer();
 
@@ -345,7 +352,19 @@ namespace kensyu
         [System.Web.Services.WebMethod]
         public static string CSVDownloadButton_Click(string idStr, string emailStr, string nameStr, string nameKanaStr, string birthStartStr, string birthEndStr, string prefectureStr, string genderStr, string memberStatusStr, string pageNumber, string resultAll)
         {
-            string csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
+            string csv = string.Empty;
+
+            // CSVファイル生成中に例外が発生した場合、"failed"を返す
+            try
+            {
+                // CSVファイルを生成する
+                csv = GenerateCustomerDataCSV(idStr, emailStr, nameStr, nameKanaStr, birthStartStr, birthEndStr, prefectureStr, genderStr, memberStatusStr, pageNumber, resultAll);
+            } catch (Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+
+                return "failed";
+            }
 
             return csv;
         }
@@ -392,31 +411,42 @@ namespace kensyu
         [System.Web.Services.WebMethod]
         public static string CSVUploadButton_Click(string csv)
         {
+            // エラーメッセージを格納するList
             List<string> errorMsgs = new List<string>();
 
+            // csvファイルを1行ずつ配列に格納する
             string[] separator = new string[] { "\r\n", "\n" };
+            // Splitメソッドを利用して改行文字ごとに区切って配列に格納する
             string[] csvRows = csv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
+            // ヘッダー
             string header = "id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態";
 
+            // 何行目にエラーが発生したかを表現するために使用するカウンタ
             int rowCount = 0;
 
+            // csvファイルを元に挿入処理を実行する
+            // csvファイルの行分だけループする
             foreach (string row in csvRows)
             {
                 rowCount++;
 
+                // その行がヘッダーだったなら次のループにスキップする
                 if (row == header)
                 {
                     continue;
                 }
 
+                // カンマ区切りで配列に格納する
                 string[] cols = row.Split(new string[] { "," }, StringSplitOptions.None);
 
+                // 変数に配列の中身を格納していく
                 string idStr = cols[0];
                 int id = -1;
 
+                // idStrに数字以外のものが入っていた場合、エラーメッセージを追加して次のループにスキップする
                 if(!int.TryParse(idStr, out id))
                 {
                     errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E008_ID_ILLEGAL, rowCount));
@@ -430,6 +460,7 @@ namespace kensyu
                 string birthdayStr = cols[4];
                 DateTime birthday = DateTime.Now;
 
+                // birthdayStrに不正な形式の日付が入っていた場合、エラーメッセージを追加して次のループにスキップする
                 if(!DateTime.TryParse(birthdayStr, out birthday))
                 {
                     errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E004_DATETIME_ILLEGAL, rowCount));
@@ -447,6 +478,8 @@ namespace kensyu
                     gender = 1;
                 } else
                 {
+                    // genderStrに"男性"、"女性"以外の文字列が入っていた場合、
+                    // エラーメッセージを追加して次のループにスキップする
                     errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E005_GENDER_ILLEGAL, rowCount));
                     continue;
                 }
@@ -454,6 +487,8 @@ namespace kensyu
                 string prefectureStr = cols[6];
                 int prefectureId = -1;
 
+                // prefectureStrを元に、都道府県Idを取得する
+                // もし存在しない都道府県が入っていた場合、エラーメッセージを追加して次のループにスキップする
                 using(SqlConnection connection = new SqlConnection(connectionString))
                 {
                     try
@@ -482,13 +517,17 @@ namespace kensyu
                     } catch(Exception e)
                     {
                         Debug.WriteLine(e.ToString());
+                        // 不明なエラー
                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
                         continue;
                     }
                 }
 
+                // データ挿入日
                 DateTime createdAt = DateTime.Now;
 
+                // データ挿入開始
+                // もし挿入処理中に何かの例外が発生した場合、RollBackして挿入をキャンセルする
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     try
@@ -527,21 +566,27 @@ namespace kensyu
                                 transaction.Rollback();
                                 Debug.WriteLine(e.ToString());
 
+                                // エラー番号を元にエラーメッセージを追加する
                                 switch(e.Number)
                                 {
                                     case 8115:
+                                        // idに指定できる最大文字数を超えた文字数のidを挿入しようとした
                                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E001_ID_OVERFLOW, rowCount));
                                         continue;
                                     case 2628:
+                                        // 何らかの文字列が挿入できる最大文字数を超えている
                                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E002_STRING_TOOLONG, rowCount));
                                         continue;
                                     case 2627:
+                                        // 既に登録されているidを登録しようとした
                                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E003_ID_DUPLICATE, rowCount));
                                         continue;
                                     case 109:
+                                        // 挿入に必要な値が不足している
                                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E007_NOT_ENOUGH_VALUE, rowCount));
                                         continue;
                                     default:
+                                        // 不明なエラー
                                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
                                         continue;
                                 }
@@ -551,6 +596,7 @@ namespace kensyu
                                 transaction.Rollback();
                                 Debug.WriteLine(e.ToString());
 
+                                // 不明なエラー
                                 errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
                                 continue;
                             }
@@ -560,6 +606,7 @@ namespace kensyu
                     {
                         Debug.WriteLine(e.ToString());
 
+                        // 不明なエラー
                         errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
                         continue;
                     }
@@ -567,21 +614,12 @@ namespace kensyu
                 }
             }
 
+            // 挿入結果を記録するクラスをインスタンス化
             CsvInsertResult insertResult = new CsvInsertResult();
             insertResult.errorMsgs = errorMsgs;
             insertResult.result = rowCount + "行 エラー: " + errorMsgs.Count + "件";
 
             JavaScriptSerializer js = new JavaScriptSerializer();
-
-            //StringBuilder errorMsgSb = new StringBuilder();
-            //foreach(string msg in errorMsgs)
-            //{
-            //    errorMsgSb.Append(msg);
-            //}
-
-            //string errorMsg = errorMsgSb.ToString();
-
-            //Debug.WriteLine(errorMsg);
 
             // Listをjsonの形にする
             string json = js.Serialize(insertResult);
@@ -591,12 +629,15 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static void DeleteButton_Click(string idStr)
+        public static string DeleteButton_Click(string idStr)
         {
             int id = Convert.ToInt32(idStr);
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
+            // 削除処理開始
+            // DELETE文を使用せず、UPDATE文で削除フラグをTRUEにする
+            // 途中で例外が発生した場合、"failed", 成功したなら"success"を返す
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 try
@@ -620,21 +661,25 @@ namespace kensyu
                             command.ExecuteNonQuery();
 
                             transaction.Commit();
+
+                            return "success";
                         }
                         catch (Exception e)
                         {
                             transaction.Rollback();
                             Debug.WriteLine(e.ToString());
+
+                            return "failed";
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     Debug.WriteLine(e.ToString());
+
+                    return "failed";
                 }
-
             }
-
         }
 
         [System.Web.Services.WebMethod]
