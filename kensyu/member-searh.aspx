@@ -226,14 +226,14 @@
             // もし、firstPageNumberが0以下になったり、firstPageNumberにpaginationLengthを足した値がmaxPageNumberの値を超えるなら
             // 値を修正する
 
-            // firstPageNumberが0以下の場合
-            if (firstPageNumber <= 0) {
-                firstPageNumber = 1;
-            }
-
             // firstPageNumberとpaginationLengthを足した値がmaxPageNumberの値を超える場合
             if (firstPageNumber + paginationLength > maxPageNumber) {
                 firstPageNumber = maxPageNumber + 1 - paginationLength;
+            }
+
+            // firstPageNumberが0以下の場合
+            if (firstPageNumber <= 0) {
+                firstPageNumber = 1;
             }
 
             // ページボタンの一番最後に来るページ番号
@@ -243,7 +243,7 @@
 
             // lastPageNumberが最大ページ数を超えている場合、値を修正する
             if (lastPageNumber > maxPageNumber) {
-                lastPageNumber = maxPageNumber + 1;
+                lastPageNumber = maxPageNumber;
             }
 
             // 「<」ボタンを作成する
