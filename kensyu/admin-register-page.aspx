@@ -10,20 +10,35 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript">
         function adminRegister() {
+            // 入力欄の要素を取得する
             const loginInputLoginId = document.getElementById('register-input-loginId');
             const loginInputPassword = document.getElementById('register-input-password');
 
+            // 入力されたログインidとパスワードを取得する
             const inputtedLoginId = loginInputLoginId.value;
             const inputtedPassword = loginInputPassword.value;
 
+            // エラーメッセージを表示する要素
             const registerErrorMsg = document.getElementById('register-error-msg');
             registerErrorMsg.style.visibility = 'visible';
 
+            // 未入力チェック
             if (inputtedLoginId == "" || inputtedPassword == "") {
                 registerErrorMsg.innerText = "ログインIDまたはパスワードが未入力です";
                 return false;
             }
-            
+
+            // ログインidの文字数チェック
+
+            // ログインidの最大文字数
+            const maxLoginIdCharactor = 50;
+
+            if (inputtedLoginId.length > maxLoginIdCharactor) {
+                loginErrorMsg.innerText = "ログインidに指定できる最大文字数を超えています";
+                return false;
+            }
+
+            // 登録処理
             $.ajax({
                 type: "POST",
                 url: '<%= ResolveUrl("/admin-register-page.aspx/AdminRegister") %>',
@@ -39,6 +54,7 @@
                         registerErrorMsg.style.color = "green";
                         registerErrorMsg.innerText = "登録処理が完了しました。ログイン画面に移動します。";
 
+                        // 2秒後にログイン画面に遷移する
                         setTimeout(function () {
                             window.location.href = "admin-login-page.aspx";
                         }, 2000);
@@ -48,8 +64,8 @@
                         registerErrorMsg.innerText = "予期せぬエラーが発生しました";
                     }
                 },
-                error: function (result) {
-                    alert("登録処理失敗");
+                error: function () {
+                    registerErrorMsg.innerText = "予期せぬエラーが発生しました";
                 }
             });
         }
