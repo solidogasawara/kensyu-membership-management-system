@@ -32,10 +32,7 @@ namespace kensyu
         {
             int id = Convert.ToInt32(idStr);
 
-            
-
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
-            //string query = "SELECT * FROM V_Customer";
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -52,22 +49,27 @@ namespace kensyu
 
                 connection.Open();
 
-                List<string> customerData = new List<string>();
+                // SQL文を実行して取得したデータを格納するList
+                List<Customer> customerData = new List<Customer>();
 
                 SqlDataReader reader = command.ExecuteReader();
 
                 if (reader.Read())
                 {
-                    customerData.Add(reader["name"].ToString());
-                    customerData.Add(reader["name_kana"].ToString());
-                    customerData.Add(reader["mail"].ToString());
+                    Customer customer = new Customer();
+
+                    customer.name = reader["name"].ToString();
+                    customer.nameKana = reader["name_kana"].ToString();
+                    customer.mail = reader["mail"].ToString();
 
                     DateTime birthday = (DateTime)reader["birthday"];
-                    customerData.Add(birthday.ToString("yyyy-MM-dd"));
+                    customer.birthday = birthday.ToString("yyyy-MM-dd");
 
-                    customerData.Add((bool)reader["gender"] ? "2" : "1");
-                    customerData.Add(reader["prefecture_id"].ToString());
-                    customerData.Add((bool)reader["membership_status"] ? "1" : "2");
+                    customer.gender = (bool)reader["gender"] ? "2" : "1";
+                    customer.prefecture = reader["prefecture_id"].ToString();
+                    customer.membershipStatus = (bool)reader["membership_status"] ? "1" : "2";
+
+                    customerData.Add(customer);
                 }
 
                 reader.Close();
@@ -82,14 +84,16 @@ namespace kensyu
         }
 
         [System.Web.Services.WebMethod]
-        public static void UpdateCustomerInfo(string idStr, string lastNameStr, string firstNameStr, string lastNameKanaStr, string firstNameKanaStr, string emailStr, string birthdayStr, string genderStr, string prefectureStr, string membershipStatusStr)
+        public static string UpdateCustomerInfo(string idStr, string lastNameStr, string firstNameStr, string lastNameKanaStr, string firstNameKanaStr, string emailStr, string birthdayStr, string genderStr, string prefectureStr, string membershipStatusStr)
         {
             int id = Convert.ToInt32(idStr);
             string name = lastNameStr + " " + firstNameStr;
             string nameKana = lastNameKanaStr + " " + firstNameKanaStr;
             DateTime birthday = DateTime.Parse(birthdayStr);
 
+            // 男性: false, 女性: true
             bool gender = false;
+            // genderStrが2なら女性を表す
             if(genderStr == "2")
             {
                 gender = true;
@@ -97,7 +101,9 @@ namespace kensyu
 
             int prefectureId = Convert.ToInt32(prefectureStr);
 
+            // 退会: false, 有効: true
             bool membershipStatus = false;
+            // membershipStatusStrが1なら有効を表す
             if(membershipStatusStr == "1")
             {
                 membershipStatus = true;
@@ -115,6 +121,7 @@ namespace kensyu
 
                     StringBuilder sb = new StringBuilder();
 
+                    // SQL文を作成する
                     sb.Append(@"UPDATE M_Customer");
                     sb.Append(@"   SET name = @name,");
                     sb.Append(@"       name_kana = @nameKana,");
@@ -141,6 +148,7 @@ namespace kensyu
 
                     connection.Open();
 
+                    // SqlTransactionを利用して、例外が発生した時は更新処理を中断するようにしている
                     using (SqlTransaction transaction = connection.BeginTransaction())
                     {
                         try
@@ -149,17 +157,23 @@ namespace kensyu
                             command.ExecuteNonQuery();
 
                             transaction.Commit();
+
+                            return "success";
                         }
                         catch (Exception e)
                         {
                             transaction.Rollback();
                             Debug.WriteLine(e.ToString());
+
+                            return "update failed";
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     Debug.WriteLine(e.ToString());
+
+                    return "unexpected error";
                 }
 
             }

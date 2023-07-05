@@ -23,40 +23,44 @@
                     "idStr": idStr,
                 }),
                 success: function (data) {
-                    var customerData = JSON.parse(data.d);
+                    // 取得したJSON形式のデータを配列に変換する
+                    const customerData = JSON.parse(data.d)[0];
 
-                    var name = customerData[0];
-                    var nameKana = customerData[1];
+                    // 取得したデータを変数に格納する
+                    const name = customerData["name"];
+                    const nameKana = customerData["nameKana"];
 
-                    var splitedName = name.split(' ');
-                    var splitedNameKana = nameKana.split(' ');
+                    const splitedName = name.split(' ');
+                    const splitedNameKana = nameKana.split(' ');
 
-                    var lastNameStr = splitedName[0];
-                    var firstNameStr = splitedName[1];
+                    const lastNameStr = splitedName[0];
+                    const firstNameStr = splitedName[1];
 
-                    var lastNameKanaStr = splitedNameKana[0];
-                    var firstNameKanaStr = splitedNameKana[1];
+                    const lastNameKanaStr = splitedNameKana[0];
+                    const firstNameKanaStr = splitedNameKana[1];
 
-                    var emailStr = customerData[2];
-                    var birthdayStr = customerData[3];
-                    var genderStr = customerData[4];
-                    var prefectureStr = customerData[5];
-                    var membershipStatusStr = customerData[6];
+                    const emailStr = customerData["mail"];
+                    const birthdayStr = customerData["birthday"];
+                    const genderStr = customerData["gender"];
+                    const prefectureStr = customerData["prefecture"];
+                    const membershipStatusStr = customerData["membershipStatus"];
 
-                    var id = document.getElementById('id');
+                    // idや入力欄の要素を取得する
+                    const elements = getEditElements();
 
-                    var lastName = document.getElementsByName('last_name')[0];
-                    var firstName = document.getElementsByName('first_name')[0];
+                    // 取得した要素を変数に代入する
+                    const id = elements["id"]; // id
+                    const email = elements["email"]; // メールアドレス
+                    const lastName = elements["lastName"]; // 苗字(漢字)
+                    const firstName = elements["firstName"]; // 名前(漢字)
+                    const lastNameKana = elements["lastNameKana"]; // 苗字(かな)
+                    const firstNameKana = elements["firstNameKana"]; // 名前(かな)
+                    const birthday = elements["birthday"]; // 誕生日
+                    const prefecture = elements["prefecture"]; // 都道府県
+                    const gender = elements["gender"]; // 性別
+                    const membershipStatus = elements["membershipStatus"]; // 会員状態
 
-                    var lastNameKana = document.getElementsByName('last_name_kana')[0];
-                    var firstNameKana = document.getElementsByName('first_name_kana')[0];
-
-                    var email = document.getElementsByName('email')[0];
-                    var birthday = document.getElementsByName('birthday')[0];
-                    var gender = document.getElementsByName('sex');
-                    var prefecture = document.getElementsByName('prefecture')[0];
-                    var membershipStatus = document.getElementsByName('member-status');
-
+                    // 取得したデータを入力欄に入れる
                     id.innerHTML = idStr;
 
                     lastName.value = lastNameStr;
@@ -97,20 +101,69 @@
             });
         }
 
+        // idや入力欄の要素を全て取得する
+        // 連想配列が返される
+        function getEditElements() {
+            // 要素を取得
+            const id = document.querySelector('#id');
+
+            const lastName = document.querySelector('input[name="last_name"]');
+            const firstName = document.querySelector('input[name="first_name"]');
+
+            const lastNameKana = document.querySelector('input[name="last_name_kana"]');
+            const firstNameKana = document.querySelector('input[name="first_name_kana"]');
+
+            const email = document.querySelector('input[name="email"]');
+            const birthday = document.querySelector('input[name="birthday"]');
+            const gender = document.querySelectorAll('input[name="sex"]');
+            const prefecture = document.querySelector('select[name="prefecture"]');
+            const membershipStatus = document.querySelectorAll('input[name="member-status"]');
+
+            // 要素を格納する連想配列
+            const elements = {
+                "id": id,
+                "lastName": lastName,
+                "firstName": firstName,
+                "lastNameKana": lastNameKana,
+                "firstNameKana": firstNameKana,
+                "email": email,
+                "birthday": birthday,
+                "gender": gender,
+                "prefecture": prefecture,
+                "membershipStatus": membershipStatus
+            };
+
+            return elements;
+        }
+
         function editBtnClicked() {
-            var id = document.getElementById('id').innerText;
+            // idなどの要素を取得する
+            const elements = getEditElements();
 
-            var lastName = document.getElementsByName('last_name')[0].value;
-            var firstName = document.getElementsByName('first_name')[0].value;
+            // 取得した要素を変数に格納する
+            const id = elements["id"]; // id
+            const email = elements["email"]; // メールアドレス
+            const lastName = elements["lastName"]; // 苗字(漢字)
+            const firstName = elements["firstName"]; // 名前(漢字)
+            const lastNameKana = elements["lastNameKana"]; // 苗字(かな)
+            const firstNameKana = elements["firstNameKana"]; // 名前(かな)
+            const birthday = elements["birthday"]; // 誕生日
+            const prefecture = elements["prefecture"]; // 都道府県
+            const gender = elements["gender"]; // 性別
+            const membershipStatus = elements["membershipStatus"]; // 会員状態
 
-            var lastNameKana = document.getElementsByName('last_name_kana')[0].value;
-            var firstNameKana = document.getElementsByName('first_name_kana')[0].value;
+            // 入力された文字列を取得する
+            const idStr = id.innerText;
 
-            var email = document.getElementsByName('email')[0].value;
-            var birthday = document.getElementsByName('birthday')[0].value;
-            var gender = document.getElementsByName('sex');
-            var prefecture = document.getElementsByName('prefecture')[0].value;
-            var membershipStatus = document.getElementsByName('member-status');
+            const lastNameStr = lastName.value;
+            const firstNameStr = firstName.value;
+
+            const lastNameKanaStr = lastNameKana.value;
+            const firstNameKanaStr = firstNameKana.value;
+
+            const emailStr = email.value;
+            const birthdayStr = birthday.value;
+            const prefectureStr = prefecture.value;
 
             var genderValue = "";
             var membershipStatusValue = "";
@@ -129,31 +182,130 @@
                 }
             }
 
-            $.ajax({
-                type: "POST",
-                url: '<%= ResolveUrl("/member-edit.aspx/UpdateCustomerInfo") %>',
-                contentType: "application/json",
-                data: JSON.stringify({
-                    "idStr": id,
-                    "lastNameStr": lastName,
-                    "firstNameStr": firstName,
-                    "lastNameKanaStr": lastNameKana,
-                    "firstNameKanaStr": firstNameKana,
-                    "emailStr": email,
-                    "birthdayStr": birthday,
-                    "genderStr": genderValue,
-                    "prefectureStr": prefecture,
-                    "membershipStatusStr": membershipStatusValue
-                }),
-                success: function (data) {
-                    if (!alert("更新成功")) {
-                        window.history.back();
-                    }
-                },
-                error: function (result) {
-                    alert("更新失敗");
+            // メッセージを表示するp要素
+            const messageObj = document.querySelector('.message');
+
+            // 入力チェック
+            const inputtedData = [
+                lastNameStr, firstNameStr, lastNameKanaStr, firstNameKanaStr,
+                emailStr, birthdayStr, genderValue, prefectureStr, membershipStatusValue
+            ];
+
+            // 最大文字数
+            const maxNameCharactor = 15; // 名前(漢字)
+            const maxNameKanaCharactor = 50; // 名前(かな)
+            const maxEmailCharactor = 50; // メールアドレス
+
+            // 名前は苗字と名前を半角スペースで区切った形で登録されるため、
+            // その形にして文字数チェックする
+            const name = lastNameStr + " " + firstNameStr;
+            const nameKana = lastNameKanaStr + " " + firstNameKanaStr;
+
+            // 入力欄が空の所があったかどうかを管理するフラグ
+            var isEmpty = false;
+
+            // 最大文字数を超えた入力がされたかを管理するフラグ
+            var exceedsMaxLength = {
+                "name": false,
+                "nameKana": false,
+                "email": false
+            };
+
+            // いずれかの不正な入力があったか
+            var hasInvalidInput = false;
+
+            for (var i = 0; i < inputtedData.length; i++) {
+                // 空文字チェック
+                if (inputtedData[i] == "") {
+                    isEmpty = true;
+                    hasInvalidInput = true;
+                    break;
                 }
-            });
+            }
+
+            // 最大文字数チェック
+            if (name.length > maxNameCharactor) {
+                exceedsMaxLength["name"] = true;
+                hasInvalidInput = true;
+            }
+
+            if (nameKana.length > maxNameKanaCharactor) {
+                exceedsMaxLength["nameKana"] = true;
+                hasInvalidInput = true;
+            }
+
+            if (emailStr.length > maxEmailCharactor) {
+                exceedsMaxLength["email"] = true;
+                hasInvalidInput = true;
+            }
+
+            // 不正な入力がされたなら、登録処理を中断しエラーメッセージを表示する
+            if (hasInvalidInput) {
+                // エラーメッセージの作成
+                var errorMsg = "";
+
+                if (isEmpty) {
+                    errorMsg += "いずれかの入力欄が空です。" + "\n";
+                }
+
+                if (exceedsMaxLength["name"]) {
+                    errorMsg += "名前(漢字)に入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                if (exceedsMaxLength["nameKana"]) {
+                    errorMsg += "名前(かな)に入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                if (exceedsMaxLength["email"]) {
+                    errorMsg += "メールアドレスに入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                // エラーメッセージを表示
+                messageObj.style.color = "red";
+                messageObj.innerText = errorMsg;
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: '<%= ResolveUrl("/member-edit.aspx/UpdateCustomerInfo") %>',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        "idStr": idStr,
+                        "lastNameStr": lastNameStr,
+                        "firstNameStr": firstNameStr,
+                        "lastNameKanaStr": lastNameKanaStr,
+                        "firstNameKanaStr": firstNameKanaStr,
+                        "emailStr": emailStr,
+                        "birthdayStr": birthdayStr,
+                        "genderStr": genderValue,
+                        "prefectureStr": prefectureStr,
+                        "membershipStatusStr": membershipStatusValue
+                    }),
+                    success: function (data) {
+                        // 更新処理の結果が格納される
+                        const result = data.d;
+
+                        // SQL関連のエラー
+                        if (result == "update failed") {
+                            messageObj.style.color = "red";
+                            messageObj.innerText = "会員情報の更新に失敗しました";
+                        // それ以外の例外発生
+                        } else if (result == "unexpected error") {
+                            messageObj.style.color = "red";
+                            messageObj.innerText = "不明なエラーが発生しました";
+                        // 更新成功
+                        } else if (result == "success") {
+                            messageObj.style.color = "green";
+                            messageObj.innerText = "会員情報の更新に成功しました";
+                        }
+                    },
+                    error: function () {
+                        messageObj.style.color = "red";
+                        messageObj.innerText = "サーバーとの接続に問題が発生しました";
+                    }
+                });
+            }
+
+            
         }
     </script>
 </head>
@@ -169,7 +321,7 @@
     </header>
     <main>
         <h2>会員編集</h2>
-        <form class="input-form" method="post" action="member-edit.aspx">
+        <div class="input-form">
             <table>
                 <tr>
                     <th>ID</th>
@@ -286,7 +438,8 @@
                     </td>
                 </tr>
             </table>
-        </form>
+            <p class="message"></p>
+        </div>
     </main>
 </body>
 </html>

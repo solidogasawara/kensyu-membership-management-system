@@ -666,9 +666,6 @@
 
                         console.log(JSON.stringify(arrayRow, null, '\t'));
 
-                        // 取得したデータをtableに表示するために格納する配列
-                        var tableRow = [];
-
                         // arrayRowに格納されている各データを変数に代入
                         const id = arrayRow["id"];
                         const name = arrayRow["name"];
@@ -679,15 +676,10 @@
                         const prefecture = arrayRow["prefecture"];
                         const membershipStatus = arrayRow["membershipStatus"];
 
-                        // 各データをtableRowに格納していく
-                        tableRow.push(id);
-                        tableRow.push(name);
-                        tableRow.push(nameKana);
-                        tableRow.push(mail);
-                        tableRow.push(birthday);
-                        tableRow.push(gender);
-                        tableRow.push(prefecture);
-                        tableRow.push(membershipStatus);
+                        // 取得したデータをtableに表示するために格納する配列
+                        const tableRow = [
+                            id, name, nameKana, mail, birthday, gender, prefecture, membershipStatus
+                        ];
 
                         // tr要素の作成
                         var tr = document.createElement('tr');
@@ -746,7 +738,7 @@
                     sessionStorage.setItem('resultCount', resultCount);
 
                     // セッションに検索条件を保存する
-                    // 検索条件欄の要素を連想配列で取得する
+                    // 検索条件欄の内容を連想配列で取得する
                     const querys = getSearchQuery();
 
                     // querysは連想配列でそのままではsessionStorageに保存することができないため、
