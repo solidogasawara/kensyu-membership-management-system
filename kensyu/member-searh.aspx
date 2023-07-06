@@ -195,8 +195,8 @@
             pagerUlObj.innerHTML = '';
 
             // ページネーションを作成する
-            // 最大ページ数が1ページだった場合は、ボタンを一つだけ作って処理を終える
-            if (maxPageNumber == 1) {
+            // 最大ページ数が1ページ以下だった場合は、ボタンを一つだけ作って処理を終える
+            if (maxPageNumber <= 1) {
                 const li = document.createElement('li');
                 const span = document.createElement('span');
 
@@ -659,77 +659,77 @@
                         table.deleteRow(1);
                     }
 
+                    // 結果が0件なら、ヘッダーを非表示にしてテーブル作成処理を実行しない
                     if (arrayData.length == 0) {
                         tableHeader.style.display = 'none';
-                        return;
-                    }
+                    } else {
+                        // 取得したデータを元にテーブルを作成する
+                        for (var i = 0; i < arrayData.length; i++) {
+                            // 取得したデータの1行
+                            var arrayRow = arrayData[i];
 
-                    // 取得したデータを元にテーブルを作成する
-                    for (var i = 0; i < arrayData.length; i++) {
-                        // 取得したデータの1行
-                        var arrayRow = arrayData[i];
+                            console.log(JSON.stringify(arrayRow, null, '\t'));
 
-                        console.log(JSON.stringify(arrayRow, null, '\t'));
+                            // arrayRowに格納されている各データを変数に代入
+                            const id = arrayRow["id"];
+                            const name = arrayRow["name"];
+                            const nameKana = arrayRow["nameKana"];
+                            const mail = arrayRow["mail"];
+                            const birthday = arrayRow["birthday"];
+                            const gender = arrayRow["gender"];
+                            const prefecture = arrayRow["prefecture"];
+                            const membershipStatus = arrayRow["membershipStatus"];
 
-                        // arrayRowに格納されている各データを変数に代入
-                        const id = arrayRow["id"];
-                        const name = arrayRow["name"];
-                        const nameKana = arrayRow["nameKana"];
-                        const mail = arrayRow["mail"];
-                        const birthday = arrayRow["birthday"];
-                        const gender = arrayRow["gender"];
-                        const prefecture = arrayRow["prefecture"];
-                        const membershipStatus = arrayRow["membershipStatus"];
+                            // 取得したデータをtableに表示するために格納する配列
+                            const tableRow = [
+                                id, name, nameKana, mail, birthday, gender, prefecture, membershipStatus
+                            ];
 
-                        // 取得したデータをtableに表示するために格納する配列
-                        const tableRow = [
-                            id, name, nameKana, mail, birthday, gender, prefecture, membershipStatus
-                        ];
+                            // tr要素の作成
+                            const tr = document.createElement('tr');
 
-                        // tr要素の作成
-                        const tr = document.createElement('tr');
+                            // tableRowを元に、tr要素の中身の部分を作っていく
+                            for (var j = 0; j < tableRow.length; j++) {
+                                // td要素の作成
+                                const td = document.createElement('td');
 
-                        // tableRowを元に、tr要素の中身の部分を作っていく
-                        for (var j = 0; j < tableRow.length; j++) {
-                            // td要素の作成
+                                // td要素に取得した情報を追加する
+                                td.appendChild(document.createTextNode(tableRow[j]));
+                                // tr要素にtd要素を追加する
+                                tr.appendChild(td);
+                            }
+
                             const td = document.createElement('td');
 
-                            // td要素に取得した情報を追加する
-                            td.appendChild(document.createTextNode(tableRow[j]));
-                            // tr要素にtd要素を追加する
+                            const div = document.createElement('div');
+                            div.className = "button-box";
+
+                            // 編集、削除ボタンを作成する
+                            // 編集ボタン
+                            const editBtn = document.createElement('input');
+                            editBtn.className = "link-button edit-button";
+                            editBtn.type = "button";
+                            editBtn.setAttribute('onclick', "editBtnClicked(" + (i + 1) + ")");
+                            editBtn.value = "編集";
+
+                            // 削除ボタン
+                            const deleteBtn = document.createElement('input');
+                            deleteBtn.className = "delete-button";
+                            deleteBtn.type = "button";
+                            deleteBtn.setAttribute('onclick', "deleteConfirmOpen(" + (i + 1) + ")");
+                            deleteBtn.value = "削除";
+
+                            // 編集、削除ボタンをtr要素に追加する
+                            div.appendChild(editBtn);
+                            div.appendChild(deleteBtn);
+
+                            td.appendChild(div);
+
                             tr.appendChild(td);
+
+                            // table要素にtr要素を追加する
+                            table.appendChild(tr);
                         }
-
-                        const td = document.createElement('td');
-
-                        const div = document.createElement('div');
-                        div.className = "button-box";
-
-                        // 編集、削除ボタンを作成する
-                        // 編集ボタン
-                        const editBtn = document.createElement('input');
-                        editBtn.className = "link-button edit-button";
-                        editBtn.type = "button";
-                        editBtn.setAttribute('onclick', "editBtnClicked(" + (i + 1) + ")");
-                        editBtn.value = "編集";
-
-                        // 削除ボタン
-                        const deleteBtn = document.createElement('input');
-                        deleteBtn.className = "delete-button";
-                        deleteBtn.type = "button";
-                        deleteBtn.setAttribute('onclick', "deleteConfirmOpen(" + (i + 1) + ")");
-                        deleteBtn.value = "削除";
-
-                        // 編集、削除ボタンをtr要素に追加する
-                        div.appendChild(editBtn);
-                        div.appendChild(deleteBtn);
-
-                        td.appendChild(div);
-
-                        tr.appendChild(td);
-
-                        // table要素にtr要素を追加する
-                        table.appendChild(tr);
                     }
 
                     // セッションに検索結果の件数を保存する
