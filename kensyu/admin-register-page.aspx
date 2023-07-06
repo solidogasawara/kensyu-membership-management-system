@@ -34,7 +34,7 @@
             const maxLoginIdCharactor = 50;
 
             if (inputtedLoginId.length > maxLoginIdCharactor) {
-                loginErrorMsg.innerText = "ログインidに指定できる最大文字数を超えています";
+                registerErrorMsg.innerText = "ログインidに指定できる最大文字数を超えています";
                 return false;
             }
 
@@ -82,7 +82,7 @@
     </header>
     <main>
         <div class="register-form">
-            <form>
+            <form onsubmit="return false;">
             <table>
                 <tr>
                     <td colspan="2">
