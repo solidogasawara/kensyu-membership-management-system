@@ -238,7 +238,11 @@ body .modal-background {
     transition: all 0.3s ease-in-out;
 }
 
-header{
+body #modal-csvupload-window #modal-csvupload-textarea {
+    resize: none;
+}
+
+header {
     margin: 0;
     padding: 8px;
     display: flex;
