@@ -15,6 +15,7 @@ namespace kensyu
         public readonly static string E006_PREFECTURE_NOT_EXIST = "都道府県名が誤っています";
         public readonly static string E007_NOT_ENOUGH_VALUE = "データの挿入に必要な値が不足しています";
         public readonly static string E008_ID_ILLEGAL = "idは数字のみを使用しなくてはなりません";
+        public readonly static string E009_MEMBERSHIPSTATUS_ILLEGAL = "会員状態の値が不正です";
         public readonly static string E1000_UNEXPECTED_ERROR = "予期せぬエラーが発生しました";
 
         public static string GenerateErrorMsg(string errorMsg, int rowCount)

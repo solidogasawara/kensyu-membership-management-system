@@ -523,6 +523,23 @@ namespace kensyu
                     }
                 }
 
+                string membershipStatusStr = cols[7];
+                int membershipStatus = -1;
+
+                if(membershipStatusStr == "退会")
+                {
+                    membershipStatus = 0;
+                } else if (membershipStatusStr == "有効")
+                {
+                    membershipStatus = 1;
+                } else
+                {
+                    // membershipStatusStrに"退会"、"有効"以外の文字列が入っていた場合、
+                    // エラーメッセージを追加して次のループにスキップする
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E009_MEMBERSHIPSTATUS_ILLEGAL, rowCount));
+                    continue;
+                }
+
                 // データ挿入日
                 DateTime createdAt = DateTime.Now;
 
@@ -535,8 +552,8 @@ namespace kensyu
                         SqlCommand command = new SqlCommand();
 
                         StringBuilder sb = new StringBuilder();
-                        sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, created_at)");
-                        sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @createdAt)");
+                        sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, membership_status, created_at)");
+                        sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @membershipStatus, @createdAt)");
 
                         command.Parameters.Add(new SqlParameter("@id", id));
                         command.Parameters.Add(new SqlParameter("@name", name));
@@ -545,6 +562,7 @@ namespace kensyu
                         command.Parameters.Add(new SqlParameter("@birthday", birthday));
                         command.Parameters.Add(new SqlParameter("@gender", gender));
                         command.Parameters.Add(new SqlParameter("@prefectureId", prefectureId));
+                        command.Parameters.Add(new SqlParameter("@membershipStatus", membershipStatus));
                         command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
 
                         command.CommandText = sb.ToString();
