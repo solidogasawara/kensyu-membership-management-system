@@ -448,6 +448,7 @@
         }
 
         function csvUpload(csvFile) {
+            console.log("upload");
             const modalTextarea = document.getElementById('modal-csvupload-textarea');
 
             // アップロードされたファイルの名前を取得する

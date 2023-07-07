@@ -12,6 +12,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Web.Script.Serialization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace kensyu
 {
@@ -454,7 +455,29 @@ namespace kensyu
                 }
 
                 string name = cols[1];
+
+                // nameが「田中 太郎」のような形式になっているかを調べる
+                string nameCheckRegex = @"^[一-龠]+ [一-龠]+$";
+
+                // nameが不正なら、エラーメッセージを追加して次のループにスキップする
+                if(!Regex.IsMatch(name, nameCheckRegex))
+                {
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E010_NAME_ILLEGAL, rowCount));
+                    continue;
+                }
+
                 string nameKana = cols[2];
+
+                // nameKanaが「たなか たろう」のような形式になっているかを調べる
+                string nameKanaCheckRegex = @"^[ぁ-んー]+ [ぁ-んー]+$";
+
+                // nameKanaが不正なら、エラーメッセージを追加して次のループにスキップする
+                if(Regex.IsMatch(nameKana, nameKanaCheckRegex))
+                {
+                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E011_NAMEKANA_ILLEGAL, rowCount));
+                    continue;
+                }
+
                 string email = cols[3];
 
                 string birthdayStr = cols[4];

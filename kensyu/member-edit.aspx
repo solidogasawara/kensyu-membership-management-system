@@ -249,6 +249,86 @@
                 hasInvalidInput = true;
             }
 
+            // 名前(漢字)の入力欄に漢字以外の文字が入っていないかチェックする
+            const kanjiCheckRegex = /^[一-龠]+$/;
+
+            // 漢字以外の文字が入っているかのフラグ
+            var nonKanjiDetected = {
+                "lastName": false,
+                "firstName": false
+            };
+
+            // チェック
+            if (!kanjiCheckRegex.test(lastName)) {
+                nonKanjiDetected["lastName"] = true;
+                hasInvalidInput = true;
+            } else if (!kanjiCheckRegex.test(firstName)) {
+                nonKanjiDetected["firstName"] = true;
+                hasInvalidInput = true;
+            }
+
+            // 名前(かな)の入力欄にひらがな以外の文字が入っていないかチェックする
+            const hiraganaCheckRegex = /^[ぁ-んー]+$/;
+
+            // ひらがな以外の文字が入っているかのフラグ
+            var nonHiraganaDetected = {
+                "lastName": false,
+                "firstName": false
+            };
+
+            // チェック
+            if (!hiraganaCheckRegex.test(lastName)) {
+                nonHiraganaDetected["lastName"] = true;
+                hasInvalidInput = true;
+            } else if (!hiraganaCheckRegex.test(firstName)) {
+                nonHiraganaDetected["firstName"] = true;
+                hasInvalidInput = true;
+            }
+
+            // メールアドレスの形式が正しいものかをチェックする
+            const emailCheckRegex = /^[a-zA-Z0-9_+-]+(\.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/;
+
+            // メールアドレスの形式が正しくないか
+            // 正しくないならtrueになる
+            var invalidEmail = false;
+
+            // チェック
+            if (!emailCheckRegex.test(email)) {
+                invalidEmail = true;
+                hasInvalidInput = true;
+            }
+
+            // 入力された誕生日が不正なものでないかチェックする
+
+            // チェック用のDateオブジェクト
+            const date = new Date(birthday);
+
+            // 誕生日が不正か
+            var invalidBirthday = false;
+
+            // 不正ならgetDate()メソッドの返り値がNaNになる
+            if (isNaN(date.getDate())) {
+                invalidBirthday = true;
+                hasInvalidInput = true;
+            }
+
+            // 都道府県コードが不正でないか調べる
+
+            // 都道府県コードが不正か
+            var invalidPrefecture = false;
+
+            // まず、数字であるか調べる
+            if (!isNaN(prefecture)) {
+                invalidPrefecture = true;
+                hasInvalidInput = true;
+            } else {
+                // 次に、1から47までの範囲内かを調べる
+                if (!(prefecture >= 1 && prefecture <= 47)) {
+                    invalidPrefecture = true;
+                    hasInvalidInput = true;
+                }
+            }
+
             // 不正な入力がされたなら、登録処理を中断しエラーメッセージを表示する
             if (hasInvalidInput) {
                 // エラーメッセージの作成
@@ -268,6 +348,34 @@
 
                 if (exceedsMaxLength["email"]) {
                     errorMsg += "メールアドレスに入力する事のできる最大文字数を超えています。" + "\n";
+                }
+
+                if (nonKanjiDetected["lastName"]) {
+                    errorMsg += "名前(漢字)の姓の入力欄に漢字以外の文字が入力されています" + "\n";
+                }
+
+                if (nonKanjiDetected["firstName"]) {
+                    errorMsg += "名前(漢字)の名の入力欄に漢字以外の文字が入力されています" + "\n";
+                }
+
+                if (nonHiraganaDetected["lastName"]) {
+                    errorMsg += "名前(かな)の姓の入力欄に漢字以外の文字が入力されています" + "\n";
+                }
+
+                if (nonHiraganaDetected["firstName"]) {
+                    errorMsg += "名前(かな)の名の入力欄に漢字以外の文字が入力されています" + "\n";
+                }
+
+                if (invalidEmail) {
+                    errorMsg += "メールアドレスの形式が不正です" + "\n";
+                }
+
+                if (invalidBirthday) {
+                    errorMsg += "生年月日に入力された値が不正です" + "\n";
+                }
+
+                if (invalidPrefecture) {
+                    errorMsg += "都道府県に入力された値が不正です" + "\n";
                 }
 
                 // エラーメッセージを表示
@@ -314,8 +422,6 @@
                     }
                 });
             }
-
-            
         }
     </script>
 </head>

@@ -38,6 +38,15 @@
                 return false;
             }
 
+            // パスワードの文字チェック
+            // パスワードは英語大文字、小文字、数字の組み合わせ以外認めない
+            const passwordCheckRegex = /^[A-Za-z0-9]+$/;
+
+            if (!passwordCheckRegex.test(invalidPassword)) {
+                registerErrorMsg.innerText = "パスワードにアルファベット大文字、小文字、数字以外の文字を含めることはできません";
+                return false;
+            }
+
             // 登録処理
             $.ajax({
                 type: "POST",
