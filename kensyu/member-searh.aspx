@@ -408,17 +408,23 @@
 
             const modalWindowUploadBtn = document.querySelector('.modal-csvupload-button');
 
-            const modalFileUploadObj = document.getElementById('modal-csvupload-file');
-            var csvFile = null;
-            modalFileUploadObj.addEventListener('change', (e) => {
-                csvFile = e.target.files[0];
-            });
-
             const modalTextarea = document.getElementById('modal-csvupload-textarea');
 
             const modalDoneObj = document.getElementById('modal-csvupload-done');
 
             const modalResultObj = document.querySelector('.modal-csvupload-result');
+
+            const modalFileUploadObj = document.getElementById('modal-csvupload-file');
+            var csvFile = null;
+            modalFileUploadObj.addEventListener('change', (e) => {
+                // 表示をリセット
+                modalTextarea.value = '';
+                modalDoneObj.style.visibility = 'hidden';
+                modalResultObj.innerHTML = '';
+                modalResultObj.style.visibility = 'hidden';
+
+                csvFile = e.target.files[0];
+            });
 
             // 閉じるボタンを押したとき、ウィンドウの表示を隠す
             modalWindowCloseBtn.addEventListener('click', () => {
