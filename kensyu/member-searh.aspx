@@ -429,6 +429,7 @@
                 modalDoneObj.style.visibility = 'hidden';
                 modalResultObj.innerHTML = '';
                 modalResultObj.style.visibility = 'hidden';
+                csvFile = null;
             });
 
             // アップロードボタンを押したとき、データ挿入処理を実行する
