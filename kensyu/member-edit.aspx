@@ -351,31 +351,31 @@
                 }
 
                 if (nonKanjiDetected["lastName"]) {
-                    errorMsg += "名前(漢字)の姓の入力欄に漢字以外の文字が入力されています" + "\n";
+                    errorMsg += "名前(漢字)の姓の入力欄に漢字以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonKanjiDetected["firstName"]) {
-                    errorMsg += "名前(漢字)の名の入力欄に漢字以外の文字が入力されています" + "\n";
+                    errorMsg += "名前(漢字)の名の入力欄に漢字以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonHiraganaDetected["lastName"]) {
-                    errorMsg += "名前(かな)の姓の入力欄に漢字以外の文字が入力されています" + "\n";
+                    errorMsg += "名前(かな)の姓の入力欄にひらがな以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonHiraganaDetected["firstName"]) {
-                    errorMsg += "名前(かな)の名の入力欄に漢字以外の文字が入力されています" + "\n";
+                    errorMsg += "名前(かな)の名の入力欄にひらがな以外の文字が入力されています。" + "\n";
                 }
 
                 if (invalidEmail) {
-                    errorMsg += "メールアドレスの形式が不正です" + "\n";
+                    errorMsg += "メールアドレスの形式が不正です。" + "\n";
                 }
 
                 if (invalidBirthday) {
-                    errorMsg += "生年月日に入力された値が不正です" + "\n";
+                    errorMsg += "生年月日に入力された値が不正です。" + "\n";
                 }
 
                 if (invalidPrefecture) {
-                    errorMsg += "都道府県に入力された値が不正です" + "\n";
+                    errorMsg += "都道府県に入力された値が不正です。" + "\n";
                 }
 
                 // エラーメッセージを表示
