@@ -8,6 +8,7 @@ using System.Text;
 using System.Data.SqlClient;
 using System.Configuration;
 using System.Diagnostics;
+using System.Web.Script.Serialization;
 
 namespace kensyu
 {
@@ -26,165 +27,229 @@ namespace kensyu
         [System.Web.Services.WebMethod]
         public static string AdminRegister(string loginId, string inputtedPassword)
         {
-            // 登録しようとしているログインidが既に登録されているidじゃないかを管理するフラグ
-            // 登録済みだったならtrueになる
-            bool isLoginIdExist = false;
+            // エラーメッセージを格納する変数
+            string errorMsg = "";
 
-            string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
+            // 処理結果を格納するインスタンス
+            AdminRegisterResult result = new AdminRegisterResult();
 
-            // ログインidの重複確認開始
-            // 処理中に例外が発生した場合、リザルトを返す
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            // ログインidとパスワードの入力チェック
+            AdminRegisterInputChecker checker = new AdminRegisterInputChecker();
+
+            // 入力されたログインidかパスワードが不正か
+            bool invalidinput = false;
+
+            // 未入力チェック
+            string[] datas = { loginId, inputtedPassword };
+
+            foreach(string data in datas)
             {
-                try
+                if(data == "")
                 {
-                    SqlCommand command = new SqlCommand();
-
-                    // ログインidの重複を調べるためのSQL文
-                    string query = @"SELECT COUNT(*) AS count FROM V_Admin WHERE login_id = @loginId AND delete_flag = 0";
-
-                    command.Parameters.Add(new SqlParameter("@loginId", loginId));
-
-                    command.CommandText = query;
-                    command.Connection = connection;
-
-                    connection.Open();
-
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    // もしcountが1以上なら重複ありとみなす
-                    if (reader.Read())
-                    {
-                        int loginIdCount = Convert.ToInt32(reader["count"]);
-
-                        if (loginIdCount >= 1)
-                        {
-                            isLoginIdExist = true;
-                        }
-                    }
-                } catch(Exception e)
-                {
-                    Debug.WriteLine(e.ToString());
-
-                    // 不明なエラー
-                    return "unexpected error";
+                    errorMsg = AdminRegisterCheckError.E001_EMPTY_INPUT;
+                    invalidinput = true;
+                    break;
                 }
             }
 
-            // 重複ありだったならリザルトを返して、この後の処理を実行しない
-            if (isLoginIdExist)
+            // ログインidの長さをチェック
+            if(!checker.LoginIdLengthCheck(loginId))
             {
-                return "loginId exists";
+                errorMsg = AdminRegisterCheckError.E002_LOGINID_MAX_INPUT_EXCEEDED;
+                invalidinput = true;
             }
 
-            // idを連番にするためにデータ数を調べる
-            int count = 0;
-
-            // データ数を調べる
-            // 処理中に例外が発生した場合、リザルトを返す
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            // パスワードの文字列をチェック
+            // アルファベットの大文字、小文字、数字の組み合わせ以外は認めない
+            if(!checker.PasswordValidationCheck(inputtedPassword))
             {
-                try
-                {
-                    string query = "SELECT COUNT(*) AS count FROM M_Customer";
-                    SqlCommand command = new SqlCommand(query, connection);
-
-                    connection.Open();
-
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    if (reader.Read())
-                    {
-                        string countStr = reader["count"].ToString();
-                        count = Convert.ToInt32(countStr);
-                    }
-                } catch(Exception e)
-                {
-                    Debug.WriteLine(e.ToString());
-
-                    // 不明なエラー
-                    return "unexpected error";
-                }               
+                errorMsg = AdminRegisterCheckError.E003_PASSWORD_INVALID;
+                invalidinput = true;
             }
 
-            // 登録処理開始
-            // パスワードはハッシュ化して保存する
-            // 登録処理中に例外が発生した場合、それぞれのリザルトを返す
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            // 不正な入力があったなら、Resultに"failed"を格納し、登録処理を実行しない
+            if (invalidinput)
             {
-                SqlCommand command = new SqlCommand();
+                result.Result = "failed";
+            }
+            else
+            {
+                // 登録しようとしているログインidが既に登録されているidじゃないかを管理するフラグ
+                // 登録済みだったならtrueになる
+                bool isLoginIdExist = false;
 
-                StringBuilder sb = new StringBuilder();
-                sb.Append(@"INSERT INTO M_Admin (id, role_id, login_id, salt, password, created_at)");
-                sb.Append(@"VALUES (@id, @roleId, @loginId, @salt, @password, @createdAt)");
+                string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
-                string query = sb.ToString();
-
-                // 連番にするため、データ数に1を足す
-                int id = count + 1;
-
-                // ソルトを取得する
-                string salt = AuthenticationManager.GenerateSalt();
-                // 入力されたパスワードにソルトを足したものをハッシュ化する
-                string password = AuthenticationManager.HashPassword(inputtedPassword, salt);
-
-                // 登録日
-                DateTime createdAt = DateTime.Now;
-
-                command.Parameters.Add(new SqlParameter("@id", id));
-                command.Parameters.Add(new SqlParameter("@roleId", 2));
-                command.Parameters.Add(new SqlParameter("@loginId", loginId));
-                command.Parameters.Add(new SqlParameter("@salt", salt));
-                command.Parameters.Add(new SqlParameter("@password", password));
-                command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
-
-                command.CommandText = query;
-                command.Connection = connection;
-
-                connection.Open();
-
-                using (SqlTransaction transaction = connection.BeginTransaction())
+                // ログインidの重複確認開始
+                // 処理中に例外が発生した場合、Resultに"failed"を格納する
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     try
                     {
-                        command.Transaction = transaction;
-                        command.ExecuteNonQuery();
+                        SqlCommand command = new SqlCommand();
 
-                        transaction.Commit();
+                        // ログインidの重複を調べるためのSQL文
+                        string query = @"SELECT COUNT(*) AS count FROM V_Admin WHERE login_id = @loginId AND delete_flag = 0";
 
-                        // 登録に成功したら、セッションを削除する
-                        HttpContext context = HttpContext.Current;
-                        context.Session.Remove("loginId");
-                        context.Session.Remove("roleId");
+                        command.Parameters.Add(new SqlParameter("@loginId", loginId));
 
-                        // 成功
-                        return "success";
-                    }
-                    catch (SqlException e)
-                    {
-                        transaction.Rollback();
-                        Debug.WriteLine(e.ToString());
+                        command.CommandText = query;
+                        command.Connection = connection;
 
-                        if(e.Number == 2627)
+                        connection.Open();
+
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        // もしcountが1以上なら重複ありとみなす
+                        if (reader.Read())
                         {
-                            // 既に登録されているログインidを登録しようとした
-                            return "loginId exists";
-                        } else
+                            int loginIdCount = Convert.ToInt32(reader["count"]);
+
+                            if (loginIdCount >= 1)
+                            {
+                                isLoginIdExist = true;
+                            }
+                        }
+
+                        reader.Close();
+
+                        // 重複ありだったならResultに"failed"を格納し、登録処理を実行しない
+                        if (isLoginIdExist)
                         {
-                            // 不明なエラー
-                            return "unexpected error";
+                            result.Result = "failed";
+                            errorMsg = AdminRegisterError.E001_LOGINID_EXISTS;
+                        }
+                        else
+                        {
+                            // idを連番にするためにデータ数を調べる
+                            int count = 0;
+
+                            // データ数を調べる
+                            // 処理中に例外が発生した場合、Resultに"failed"を格納する
+                            try
+                            {
+                                query = "SELECT COUNT(*) AS count FROM M_Customer";
+
+                                connection.Open();
+
+                                if (reader.Read())
+                                {
+                                    string countStr = reader["count"].ToString();
+                                    count = Convert.ToInt32(countStr);
+                                }
+
+                                reader.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.WriteLine(e.ToString());
+
+                                // 不明なエラー
+                                result.Result = "failed";
+                                errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
+                            }
+
+                            // 登録処理開始
+                            // パスワードはハッシュ化して保存する
+                            // 登録処理中に例外が発生した場合、Resultに"failed"を格納する
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append(@"INSERT INTO M_Admin (id, role_id, login_id, salt, password, created_at)");
+                            sb.Append(@"VALUES (@id, @roleId, @loginId, @salt, @password, @createdAt)");
+
+                            query = sb.ToString();
+
+                            // 連番にするため、データ数に1を足す
+                            int id = count + 1;
+
+                            // ソルトを取得する
+                            string salt = AuthenticationManager.GenerateSalt();
+                            // 入力されたパスワードにソルトを足したものをハッシュ化する
+                            string password = AuthenticationManager.HashPassword(inputtedPassword, salt);
+
+                            // 登録日
+                            DateTime createdAt = DateTime.Now;
+
+                            command.Parameters.Add(new SqlParameter("@id", id));
+                            command.Parameters.Add(new SqlParameter("@roleId", 2));
+                            command.Parameters.Add(new SqlParameter("@loginId", loginId));
+                            command.Parameters.Add(new SqlParameter("@salt", salt));
+                            command.Parameters.Add(new SqlParameter("@password", password));
+                            command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
+
+                            command.CommandText = query;
+                            command.Connection = connection;
+
+                            connection.Open();
+
+                            using (SqlTransaction transaction = connection.BeginTransaction())
+                            {
+                                try
+                                {
+                                    command.Transaction = transaction;
+                                    command.ExecuteNonQuery();
+
+                                    transaction.Commit();
+
+                                    // 登録に成功したら、セッションを削除する
+                                    HttpContext context = HttpContext.Current;
+                                    context.Session.Remove("loginId");
+                                    context.Session.Remove("roleId");
+
+                                    // 成功
+                                    result.Result = "success";
+                                }
+                                catch (SqlException e)
+                                {
+                                    transaction.Rollback();
+                                    Debug.WriteLine(e.ToString());
+
+                                    if (e.Number == 2627)
+                                    {
+                                        // 既に登録されているログインidを登録しようとした
+                                        result.Result = "failed";
+                                        errorMsg = AdminRegisterError.E001_LOGINID_EXISTS;
+                                    }
+                                    else
+                                    {
+                                        // 不明なエラー
+                                        result.Result = "failed";
+                                        errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    transaction.Rollback();
+                                    Debug.WriteLine(e.ToString());
+
+                                    // 不明なエラー
+                                    result.Result = "failed";
+                                    errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
+                                }
+                            }
                         }
                     }
                     catch (Exception e)
                     {
-                        transaction.Rollback();
                         Debug.WriteLine(e.ToString());
 
                         // 不明なエラー
-                        return "unexpected error";
+                        result.Result = "failed";
+                        errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
                     }
                 }
             }
+
+            // エラーメッセージを格納する
+            result.ErrorMsg = errorMsg;
+
+            JavaScriptSerializer js = new JavaScriptSerializer();
+
+            // Listをjsonの形にする
+            string json = js.Serialize(result);
+
+            // jsonを返す
+            return json;
         }
     }
 }

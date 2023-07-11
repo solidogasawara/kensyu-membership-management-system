@@ -450,7 +450,7 @@ namespace kensyu
                 // idStrに数字以外のものが入っていた場合、エラーメッセージを追加して次のループにスキップする
                 if(!int.TryParse(idStr, out id))
                 {
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E008_ID_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E008_ID_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -462,7 +462,7 @@ namespace kensyu
                 // nameが不正なら、エラーメッセージを追加して次のループにスキップする
                 if(!Regex.IsMatch(name, nameCheckRegex))
                 {
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E010_NAME_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E010_NAME_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -474,7 +474,7 @@ namespace kensyu
                 // nameKanaが不正なら、エラーメッセージを追加して次のループにスキップする
                 if(Regex.IsMatch(nameKana, nameKanaCheckRegex))
                 {
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E011_NAMEKANA_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E011_NAMEKANA_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -486,7 +486,7 @@ namespace kensyu
                 // birthdayStrに不正な形式の日付が入っていた場合、エラーメッセージを追加して次のループにスキップする
                 if(!DateTime.TryParse(birthdayStr, out birthday))
                 {
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E004_DATETIME_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E004_DATETIME_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -503,7 +503,7 @@ namespace kensyu
                 {
                     // genderStrに"男性"、"女性"以外の文字列が入っていた場合、
                     // エラーメッセージを追加して次のループにスキップする
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E005_GENDER_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E005_GENDER_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -534,14 +534,14 @@ namespace kensyu
                             prefectureId = (int) reader["id"];
                         } else
                         {
-                            errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
                             continue;
                         }
                     } catch(Exception e)
                     {
                         Debug.WriteLine(e.ToString());
                         // 不明なエラー
-                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
                         continue;
                     }
                 }
@@ -559,7 +559,7 @@ namespace kensyu
                 {
                     // membershipStatusStrに"退会"、"有効"以外の文字列が入っていた場合、
                     // エラーメッセージを追加して次のループにスキップする
-                    errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E009_MEMBERSHIPSTATUS_ILLEGAL, rowCount));
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E009_MEMBERSHIPSTATUS_ILLEGAL, rowCount));
                     continue;
                 }
 
@@ -612,23 +612,23 @@ namespace kensyu
                                 {
                                     case 8115:
                                         // idに指定できる最大文字数を超えた文字数のidを挿入しようとした
-                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E001_ID_OVERFLOW, rowCount));
+                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
                                         continue;
                                     case 2628:
                                         // 何らかの文字列が挿入できる最大文字数を超えている
-                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E002_STRING_TOOLONG, rowCount));
+                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E002_STRING_TOOLONG, rowCount));
                                         continue;
                                     case 2627:
                                         // 既に登録されているidを登録しようとした
-                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E003_ID_DUPLICATE, rowCount));
+                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E003_ID_DUPLICATE, rowCount));
                                         continue;
                                     case 109:
                                         // 挿入に必要な値が不足している
-                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E007_NOT_ENOUGH_VALUE, rowCount));
+                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
                                         continue;
                                     default:
                                         // 不明なエラー
-                                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
                                         continue;
                                 }
                             }
@@ -638,7 +638,7 @@ namespace kensyu
                                 Debug.WriteLine(e.ToString());
 
                                 // 不明なエラー
-                                errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
                                 continue;
                             }
                         }
@@ -648,7 +648,7 @@ namespace kensyu
                         Debug.WriteLine(e.ToString());
 
                         // 不明なエラー
-                        errorMsgs.Add(InsertError.GenerateErrorMsg(InsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
                         continue;
                     }
 

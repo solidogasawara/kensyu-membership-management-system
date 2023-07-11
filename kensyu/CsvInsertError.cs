@@ -5,7 +5,7 @@ using System.Web;
 
 namespace kensyu
 {
-    public class InsertError
+    public class CsvInsertError
     {
         public readonly static string E001_ID_OVERFLOW = "idに最大値を超えた値を挿入しようとしました";
         public readonly static string E002_STRING_TOOLONG = "名前やメールアドレスなどに最大文字数を超えた文字列を挿入しようとしました";

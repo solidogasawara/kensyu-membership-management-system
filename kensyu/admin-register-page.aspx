@@ -25,7 +25,7 @@
             // 未入力チェック
             if (inputtedLoginId == "" || inputtedPassword == "") {
                 registerErrorMsg.innerText = "ログインIDまたはパスワードが未入力です";
-                return false;
+                return;
             }
 
             // ログインidの文字数チェック
@@ -35,7 +35,7 @@
 
             if (inputtedLoginId.length > maxLoginIdCharactor) {
                 registerErrorMsg.innerText = "ログインidに指定できる最大文字数を超えています";
-                return false;
+                return;
             }
 
             // パスワードの文字チェック
@@ -44,7 +44,7 @@
 
             if (!passwordCheckRegex.test(invalidPassword)) {
                 registerErrorMsg.innerText = "パスワードにアルファベット大文字、小文字、数字以外の文字を含めることはできません";
-                return false;
+                return;
             }
 
             // 登録処理
@@ -57,7 +57,13 @@
                     "inputtedPassword": inputtedPassword
                 }),
                 success: function (data) {
-                    const result = data.d;
+                    const parsedData = JSON.parse(data.d);
+
+                    // 処理結果を取得
+                    const result = parsedData["Result"];
+
+                    // エラーメッセージを取得
+                    const errorMsg = parsedData["ErrorMsg"];
 
                     if (result == "success") {
                         registerErrorMsg.style.color = "green";
@@ -67,10 +73,8 @@
                         setTimeout(function () {
                             window.location.href = "admin-login-page.aspx";
                         }, 2000);
-                    } else if (result == "loginId exists") {
-                        registerErrorMsg.innerText = "入力されたログインiDは既に登録されています";
-                    } else if (result == "unexpected error") {
-                        registerErrorMsg.innerText = "予期せぬエラーが発生しました";
+                    } else if (result == "failed") {
+                        registerErrorMsg.innerText = errorMsg;
                     }
                 },
                 error: function () {

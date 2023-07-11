@@ -400,20 +400,29 @@
                     }),
                     success: function (data) {
                         // 更新処理の結果が格納される
-                        const result = data.d;
+                        const parsedData = JSON.parse(data.d);
 
-                        // SQL関連のエラー
-                        if (result == "update failed") {
-                            messageObj.style.color = "red";
-                            messageObj.innerText = "会員情報の更新に失敗しました";
-                        // それ以外の例外発生
-                        } else if (result == "unexpected error") {
-                            messageObj.style.color = "red";
-                            messageObj.innerText = "不明なエラーが発生しました";
-                        // 更新成功
-                        } else if (result == "success") {
+                        // 処理結果を取得
+                        const result = parsedData["Result"];
+
+                        // エラーメッセージを取得
+                        const errorMsgs = parsedData["ErrorMsgs"];
+
+                        // 複数のエラーメッセージを一つの文字列にする
+                        const errorMsg = "";
+
+                        for (let msg in errorMsgs) {
+                            errorMsg += msg + "\n";
+                        }
+
+                        // 処理成功
+                        if (result == "success") {
                             messageObj.style.color = "green";
                             messageObj.innerText = "会員情報の更新に成功しました";
+                        // 処理失敗
+                        } else if (result == "failed") {
+                            messageObj.style.color = "red";
+                            messageObj.innerText = errorMsg;
                         }
                     },
                     error: function () {

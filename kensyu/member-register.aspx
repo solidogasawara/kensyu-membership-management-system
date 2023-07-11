@@ -260,14 +260,27 @@
                         "prefecture": prefecture
                     }),
                     success: function (data) {
-                        const result = data.d;
+                        const parsedData = JSON.parse(data.d);
+
+                        // 処理結果を取得する
+                        const result = parsedData["Result"];
+
+                        // エラーメッセージを取得する
+                        const errorMsgs = parsedData["ErrorMsgs"];
+
+                        // 複数のエラーメッセージを一つの文字列にする
+                        const errorMsg = "";
+
+                        for (let msg in errorMsgs) {
+                            errorMsg += msg + "\n";
+                        }
 
                         if (result == "success") {
                             messageObj.style.color = "green";
                             messageObj.innerText = "登録に成功しました";
                         } else if (result == "failed") {
                             messageObj.style.color = "red";
-                            messageObj.innerText = "登録処理に失敗しました";
+                            messageObj.innerText = errorMsg;
                         }
                     },
                     error: function () {

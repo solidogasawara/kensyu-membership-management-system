@@ -49,7 +49,7 @@
                     }
                 },
                 error: function () {
-                    loginErrorMsg.innerText = "何らかのエラーが発生しました";
+                    loginErrorMsg.innerText = "不明なエラーが発生しました";
                 }
             });
         }
