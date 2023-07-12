@@ -31,7 +31,7 @@
             const firstNameKana = firstNameKanaObj.value;
             const lastNameKana = lastNameKanaObj.value;
             const email = emailObj.value;
-            const birthday = birthdayObj.value;            
+            const birthday = birthdayObj.value;
 
             var genderValue = "";
 
@@ -51,6 +51,19 @@
 
             if (genderRBtnSelected[1]) {
                 genderValue = genderObj[1].value;
+            }
+
+            // いずれかの不正な入力があったか
+            let hasInvalidInput = false;
+
+            // genderValueに1と2以外が入っていないかチェックする
+
+            // genderValueが不正か
+            let invalidGender = false;
+
+            if (!(genderValue == "1" || genderValue == "2")) {
+                invalidGender = true;
+                hasInvalidInput = true;
             }
 
             const prefecture = prefectureObj.value;
@@ -83,9 +96,6 @@
                 "nameKana": false,
                 "email": false
             };
-
-            // いずれかの不正な入力があったか
-            var hasInvalidInput = false;
 
             for (var i = 0; i < inputtedData.length; i++) {
                 // 空文字チェック
@@ -125,7 +135,9 @@
             if (!kanjiCheckRegex.test(lastName)) {
                 nonKanjiDetected["lastName"] = true;
                 hasInvalidInput = true;
-            } else if (!kanjiCheckRegex.test(firstName)) {
+            }
+
+            if (!kanjiCheckRegex.test(firstName)) {
                 nonKanjiDetected["firstName"] = true;
                 hasInvalidInput = true;
             }
@@ -140,10 +152,12 @@
             };
 
             // チェック
-            if (!hiraganaCheckRegex.test(lastName)) {
+            if (!hiraganaCheckRegex.test(lastNameKana)) {
                 nonHiraganaDetected["lastName"] = true;
                 hasInvalidInput = true;
-            } else if (!hiraganaCheckRegex.test(firstName)) {
+            }
+
+            if (!hiraganaCheckRegex.test(firstNameKana)) {
                 nonHiraganaDetected["firstName"] = true;
                 hasInvalidInput = true;
             }
@@ -180,13 +194,15 @@
             // 都道府県コードが不正か
             var invalidPrefecture = false;
 
+            const prefectureNum = Number(prefecture);
+
             // まず、数字であるか調べる
-            if (!isNaN(prefecture)) {
+            if (isNaN(prefectureNum)) {
                 invalidPrefecture = true;
                 hasInvalidInput = true;
             } else {
                 // 次に、1から47までの範囲内かを調べる
-                if (!(prefecture >= 1 && prefecture <= 47)) {
+                if (!(prefectureNum >= 1 && prefectureNum <= 47)) {
                     invalidPrefecture = true;
                     hasInvalidInput = true;
                 }
@@ -237,6 +253,10 @@
                     errorMsg += "生年月日に入力された値が不正です。" + "\n";
                 }
 
+                if (invalidGender) {
+                    errorMsg += "性別が不正です。" + "\n";
+                }
+
                 if (invalidPrefecture) {
                     errorMsg += "都道府県に入力された値が不正です。" + "\n";
                 }
@@ -269,9 +289,9 @@
                         const errorMsgs = parsedData["ErrorMsgs"];
 
                         // 複数のエラーメッセージを一つの文字列にする
-                        const errorMsg = "";
+                        let errorMsg = "";
 
-                        for (let msg in errorMsgs) {
+                        for (let msg of errorMsgs) {
                             errorMsg += msg + "\n";
                         }
 

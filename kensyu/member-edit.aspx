@@ -192,6 +192,29 @@
                 }
             }
 
+            // いずれかの不正な入力があったか
+            let hasInvalidInput = false;
+
+            // genderValueに1と2以外が入っていないかチェックする
+
+            // genderValueが不正か
+            let invalidGender = false;
+
+            if (!(genderValue == "1" || genderValue == "2")) {
+                invalidGender = true;
+                hasInvalidInput = true;
+            }
+
+            // membershipStatusValueに1と2以外が入っていないかチェックする
+
+            // membershipStatusValueが不正か
+            let invalidMembershipStatus = false;
+
+            if (!(membershipStatusValue == "1" || membershipStatusValue == "2")) {
+                invalidMembershipStatus = true;
+                hasInvalidInput = true;
+            }
+
             // メッセージを表示するp要素
             const messageObj = document.querySelector('.message');
 
@@ -220,9 +243,6 @@
                 "nameKana": false,
                 "email": false
             };
-
-            // いずれかの不正な入力があったか
-            var hasInvalidInput = false;
 
             for (var i = 0; i < inputtedData.length; i++) {
                 // 空文字チェック
@@ -259,10 +279,12 @@
             };
 
             // チェック
-            if (!kanjiCheckRegex.test(lastName)) {
+            if (!kanjiCheckRegex.test(lastNameStr)) {
                 nonKanjiDetected["lastName"] = true;
                 hasInvalidInput = true;
-            } else if (!kanjiCheckRegex.test(firstName)) {
+            }
+
+            if (!kanjiCheckRegex.test(firstNameStr)) {
                 nonKanjiDetected["firstName"] = true;
                 hasInvalidInput = true;
             }
@@ -277,10 +299,12 @@
             };
 
             // チェック
-            if (!hiraganaCheckRegex.test(lastName)) {
+            if (!hiraganaCheckRegex.test(lastNameKanaStr)) {
                 nonHiraganaDetected["lastName"] = true;
                 hasInvalidInput = true;
-            } else if (!hiraganaCheckRegex.test(firstName)) {
+            }
+
+            if (!hiraganaCheckRegex.test(firstNameKanaStr)) {
                 nonHiraganaDetected["firstName"] = true;
                 hasInvalidInput = true;
             }
@@ -293,7 +317,7 @@
             var invalidEmail = false;
 
             // チェック
-            if (!emailCheckRegex.test(email)) {
+            if (!emailCheckRegex.test(emailStr)) {
                 invalidEmail = true;
                 hasInvalidInput = true;
             }
@@ -301,7 +325,7 @@
             // 入力された誕生日が不正なものでないかチェックする
 
             // チェック用のDateオブジェクト
-            const date = new Date(birthday);
+            const date = new Date(birthdayStr);
 
             // 誕生日が不正か
             var invalidBirthday = false;
@@ -317,13 +341,15 @@
             // 都道府県コードが不正か
             var invalidPrefecture = false;
 
+            const prefectureNum = Number(prefectureStr);
+
             // まず、数字であるか調べる
-            if (!isNaN(prefecture)) {
+            if (isNaN(prefectureNum)) {
                 invalidPrefecture = true;
                 hasInvalidInput = true;
             } else {
                 // 次に、1から47までの範囲内かを調べる
-                if (!(prefecture >= 1 && prefecture <= 47)) {
+                if (!(prefectureNum >= 1 && prefectureNum <= 47)) {
                     invalidPrefecture = true;
                     hasInvalidInput = true;
                 }
@@ -374,8 +400,16 @@
                     errorMsg += "生年月日に入力された値が不正です。" + "\n";
                 }
 
+                if (invalidGender) {
+                    errorMsg += "性別が不正です。" + "\n";
+                }
+
                 if (invalidPrefecture) {
                     errorMsg += "都道府県に入力された値が不正です。" + "\n";
+                }
+
+                if (invalidMembershipStatus) {
+                    errorMsg += "会員状態が不正です。" + "\n";
                 }
 
                 // エラーメッセージを表示
@@ -408,10 +442,12 @@
                         // エラーメッセージを取得
                         const errorMsgs = parsedData["ErrorMsgs"];
 
-                        // 複数のエラーメッセージを一つの文字列にする
-                        const errorMsg = "";
+                        console.log(errorMsgs);
 
-                        for (let msg in errorMsgs) {
+                        // 複数のエラーメッセージを一つの文字列にする
+                        var errorMsg = "";
+
+                        for (let msg of errorMsgs) {
                             errorMsg += msg + "\n";
                         }
 

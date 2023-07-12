@@ -443,6 +443,27 @@ namespace kensyu
                 // カンマ区切りで配列に格納する
                 string[] cols = row.Split(new string[] { "," }, StringSplitOptions.None);
 
+                // 未入力チェック
+
+                // 未入力のデータがあったか
+                bool isEmpty = false;
+
+                foreach(string col in cols)
+                {
+                    if(string.IsNullOrEmpty(col))
+                    {
+                        isEmpty = true;
+                        break;
+                    }
+                }
+
+                // もし未入力のデータがあったなら、エラーメッセージを追加して次のループにスキップする
+                if (isEmpty)
+                {
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
+                    continue;
+                }
+
                 // 変数に配列の中身を格納していく
                 string idStr = cols[0];
                 int id = -1;
@@ -472,13 +493,23 @@ namespace kensyu
                 string nameKanaCheckRegex = @"^[ぁ-んー]+ [ぁ-んー]+$";
 
                 // nameKanaが不正なら、エラーメッセージを追加して次のループにスキップする
-                if(Regex.IsMatch(nameKana, nameKanaCheckRegex))
+                if(!Regex.IsMatch(nameKana, nameKanaCheckRegex))
                 {
                     errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E011_NAMEKANA_ILLEGAL, rowCount));
                     continue;
                 }
 
                 string email = cols[3];
+
+                // メールアドレスの形式が正しいものかを調べる
+                string emailCheckRegex = @"^[a-zA-Z0-9_+-]+(\.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$";
+
+                // メールアドレスが不正なら、エラーメッセージを追加して次のループにスキップする
+                if (!Regex.IsMatch(email, emailCheckRegex))
+                {
+                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E012_EMAIL_ILLEGAL, rowCount));
+                    continue;
+                }
 
                 string birthdayStr = cols[4];
                 DateTime birthday = DateTime.Now;
