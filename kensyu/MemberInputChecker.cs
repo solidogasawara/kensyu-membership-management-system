@@ -10,10 +10,10 @@ namespace kensyu
     {
         public bool NameKanjiCheck(string name)
         {
-            // nameが漢字のみの文字列か調べる
-            string nameCheckRegex = @"^[一-龠]+$";
+            // nameが漢字、ひらがな、カタカナのみの文字列か調べる
+            string nameCheckRegex = @"^[ぁ-んァ-ヶ一-龠ー]+$";
 
-            // nameに漢字以外が入力されていたならfalseを返す
+            // nameに漢字、ひらがな、カタカナ以外が入力されていたならfalseを返す
             if (!Regex.IsMatch(name, nameCheckRegex))
             {
                 return false;

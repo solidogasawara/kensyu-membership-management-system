@@ -344,6 +344,11 @@ main .input-form .button-box input[type="submit"]{
     max-width: 100%;
 }
 
+main .csv-download-upload .button-box button {
+    width: 180px;
+    max-width: 100%;
+}
+
 main .pager{
     margin: 0 0 8px;
     padding: 0;

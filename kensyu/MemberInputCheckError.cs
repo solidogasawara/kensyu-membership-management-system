@@ -7,10 +7,10 @@ namespace kensyu
 {
     public class MemberInputCheckError
     {
-        public readonly static string E001_NON_KANJI_LASTNAME = "名前(漢字)の姓の入力欄に漢字以外の文字が入力されています。";
-        public readonly static string E002_NON_KANJI_FIRSTNAME = "名前(漢字)の名の入力欄に漢字以外の文字が入力されています。";
-        public readonly static string E003_NON_HIRAGANA_LASTNAME = "名前(かな)の姓の入力欄に漢字以外の文字が入力されています。";
-        public readonly static string E004_NON_HIRAGANA_FIRSTNAME = "名前(かな)の名の入力欄に漢字以外の文字が入力されています。";
+        public readonly static string E001_NON_KANJI_LASTNAME = "名前の姓の入力欄に漢字、ひらがな、カタカナ以外の文字が入力されています。";
+        public readonly static string E002_NON_KANJI_FIRSTNAME = "名前の名の入力欄に漢字、ひらがな、カタカナ以外の文字が入力されています。";
+        public readonly static string E003_NON_HIRAGANA_LASTNAME = "名前(かな)の姓の入力欄にひらがな以外の文字が入力されています。";
+        public readonly static string E004_NON_HIRAGANA_FIRSTNAME = "名前(かな)の名の入力欄にひらがな以外の文字が入力されています。";
         public readonly static string E005_INVALID_EMAIL = "メールアドレスの形式が不正です。";
         public readonly static string E006_INVALID_BIRTHDAY = "生年月日に入力された値が不正です。";
         public readonly static string E007_INVALID_GENDER = "性別が不正です。";

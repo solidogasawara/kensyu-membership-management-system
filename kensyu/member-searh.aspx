@@ -73,7 +73,7 @@
                 // 取得した要素を変数に代入する
                 const id = queryElements["id"]; // id
                 const email = queryElements["email"]; // メールアドレス
-                const name = queryElements["name"]; // 名前(漢字)
+                const name = queryElements["name"]; // 名前
                 const nameKana = queryElements["nameKana"]; // 名前(かな)
                 const birthStart = queryElements["birthStart"]; // 誕生日(始め)
                 const birthEnd = queryElements["birthEnd"]; // 誕生日(終わり)
@@ -84,7 +84,7 @@
                 // セッションに保存されていた各要素のvalueプロパティを変数に代入する
                 const idStr = querys["id"]; // id
                 const emailStr = querys["email"]; // メールアドレス
-                const nameStr = querys["name"]; // 名前(漢字)
+                const nameStr = querys["name"]; // 名前
                 const nameKanaStr = querys["nameKana"]; // 名前(かな)
                 const birthStartStr = querys["birthStart"]; // 誕生日(始め)
                 const birthEndStr = querys["birthEnd"]; // 誕生日(終わり)
@@ -783,11 +783,11 @@
         }
 
         // 検索条件を入力するテキストボックスやチェックボックスなどの要素を連想配列で取得する
-        // id, メールアドレス, 名前(漢字), 名前(かな), 誕生日(始め), 誕生日(終わり), 都道府県, 性別, 会員状態
+        // id, メールアドレス, 名前, 名前(かな), 誕生日(始め), 誕生日(終わり), 都道府県, 性別, 会員状態
         function getSearchQueryElements() {
             const id = document.querySelector('.search-form input[name="id"]'); // id
             const email = document.querySelector('input[name="email"]'); // メールアドレス
-            const name = document.querySelector('input[name="name"]'); // 名前(漢字)
+            const name = document.querySelector('input[name="name"]'); // 名前
             const nameKana = document.querySelector('input[name="name_kana"]'); // 名前(かな)
             const birthStart = document.querySelector('input[name="birth-start"]'); // 誕生日(始め)
             const birthEnd = document.querySelector('input[name="birth-end"]'); // 誕生日(終わり)
@@ -819,7 +819,7 @@
 
             const id = queryElements["id"].value; // id
             const email = queryElements["email"].value; // メールアドレス
-            const name = queryElements["name"].value; // 名前(漢字)
+            const name = queryElements["name"].value; // 名前
             const nameKana = queryElements["nameKana"].value; // 名前(かな)
             const birthStart = queryElements["birthStart"].value; // 誕生日(始め)
             const birthEnd = queryElements["birthEnd"].value; // 誕生日(終わり)
@@ -1197,9 +1197,9 @@
         
         <div class="csv-download-upload">
             <div class="button-box">
-                <button class="csv-download-button" onclick="csvDownload(false)">このページの検索結果をCSV形式でダウンロード</button>
-                <button class="csv-download-button" onclick="csvDownload(true)">全体の検索結果をCSV形式でダウンロード</button>
-                <button id="csv-upload-button" onclick="csvUploadWindowOpen()">CSVファイルをアップロード</button>
+                <button class="csv-download-button" onclick="csvDownload(false)">検索結果をCSVダウンロード</button>
+                <button class="csv-download-button" onclick="csvDownload(true)">全件CSVダウンロード</button>
+                <button id="csv-upload-button" onclick="csvUploadWindowOpen()">CSVアップロード</button>
             </div>
         </div>
         <br />

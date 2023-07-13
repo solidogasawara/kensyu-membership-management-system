@@ -44,7 +44,7 @@ namespace kensyu
             // それぞれの値が不正ならエラーメッセージを追加していく
             MemberInputChecker checker = new MemberInputChecker();
 
-            // lastNameとfirstNameが漢字のみの文字列かチェックする
+            // lastNameとfirstNameが漢字、ひらがな、カタカナのみの文字列かチェックする
             if(!checker.NameKanjiCheck(lastName))
             {
                 errorMsgs.Add(MemberInputCheckError.E001_NON_KANJI_LASTNAME);
@@ -122,7 +122,7 @@ namespace kensyu
                 result.ErrorMsgs = errorMsgs;
             } else
             {
-                // 名前(漢字)
+                // 名前
                 string name = lastName + " " + firstName;
                 // 名前(かな)
                 string nameKana = lastNameKana + " " + firstNameKana;

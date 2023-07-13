@@ -78,7 +78,7 @@
             ];
 
             // 最大文字数
-            const maxNameCharactor = 15; // 名前(漢字)
+            const maxNameCharactor = 15; // 名前
             const maxNameKanaCharactor = 50; // 名前(かな)
             const maxEmailCharactor = 50; // メールアドレス
 
@@ -122,10 +122,10 @@
                 hasInvalidInput = true;
             }
 
-            // 名前(漢字)の入力欄に漢字以外の文字が入っていないかチェックする
-            const kanjiCheckRegex = /^[一-龠]+$/;
+            // 名前の入力欄に漢字、ひらがな、カタカナ以外の文字が入っていないかチェックする
+            const kanjiCheckRegex = /^[ぁ-んァ-ヶ一-龠ー]+$/;
 
-            // 漢字以外の文字が入っているかのフラグ
+            // 漢字、ひらがな、カタカナ以外の文字が入っているかのフラグ
             var nonKanjiDetected = {
                 "lastName": false,
                 "firstName": false
@@ -218,7 +218,7 @@
                 }
 
                 if (exceedsMaxLength["name"]) {
-                    errorMsg += "名前(漢字)に入力する事のできる最大文字数を超えています。" + "\n";
+                    errorMsg += "名前に入力する事のできる最大文字数を超えています。" + "\n";
                 }
 
                 if (exceedsMaxLength["nameKana"]) {
@@ -230,11 +230,11 @@
                 }
 
                 if (nonKanjiDetected["lastName"]) {
-                    errorMsg += "名前(漢字)の姓の入力欄に漢字以外の文字が入力されています。" + "\n";
+                    errorMsg += "名前の姓の入力欄に漢字以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonKanjiDetected["firstName"]) {
-                    errorMsg += "名前(漢字)の名の入力欄に漢字以外の文字が入力されています。" + "\n";
+                    errorMsg += "名前の名の入力欄に漢字以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonHiraganaDetected["lastName"]) {

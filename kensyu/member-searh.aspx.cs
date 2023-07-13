@@ -73,7 +73,7 @@ namespace kensyu
             }
 
             string email = emailStr; // メールアドレス
-            string name = nameStr; // 名前(漢字)
+            string name = nameStr; // 名前
             string nameKana = nameKanaStr; // 名前(かな)
 
             // 誕生日検索
@@ -478,7 +478,9 @@ namespace kensyu
                 string name = cols[1];
 
                 // nameが「田中 太郎」のような形式になっているかを調べる
-                string nameCheckRegex = @"^[一-龠]+ [一-龠]+$";
+                // また、「田中 まり子」のように名前にひらがなが入っている可能性もあるため、
+                // 姓は漢字しか認めないが、名前はひらがなが含まれていても不正な文字列としない
+                string nameCheckRegex = @"^[ぁ-んァ-ヶ一-龠ー々]+ [ぁ-んァ-ヶ一-龠ー]+$";
 
                 // nameが不正なら、エラーメッセージを追加して次のループにスキップする
                 if(!Regex.IsMatch(name, nameCheckRegex))

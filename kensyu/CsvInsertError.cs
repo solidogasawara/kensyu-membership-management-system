@@ -16,7 +16,7 @@ namespace kensyu
         public readonly static string E007_NOT_ENOUGH_VALUE = "データの挿入に必要な値が不足しています";
         public readonly static string E008_ID_ILLEGAL = "idは数字のみを使用しなくてはなりません";
         public readonly static string E009_MEMBERSHIPSTATUS_ILLEGAL = "会員状態の値が不正です";
-        public readonly static string E010_NAME_ILLEGAL = "名前(漢字)の形式が不正です";
+        public readonly static string E010_NAME_ILLEGAL = "名前の形式が不正です";
         public readonly static string E011_NAMEKANA_ILLEGAL = "名前(かな)の形式が不正です";
         public readonly static string E012_EMAIL_ILLEGAL = "メールアドレスの形式が不正です";
         public readonly static string E1000_UNEXPECTED_ERROR = "予期せぬエラーが発生しました";
