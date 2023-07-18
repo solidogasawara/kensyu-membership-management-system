@@ -442,13 +442,13 @@
             modalWindowUploadBtn.addEventListener('click', () => {
                 // まだファイルがアップロードされていないなら、ボタンを押しても何の処理も実行しない
                 if (csvFile != null) {
+                    console.log("upload");
                     csvUpload(csvFile);
                 }
             });
         }
 
         function csvUpload(csvFile) {
-            console.log("upload");
             const modalTextarea = document.getElementById('modal-csvupload-textarea');
 
             // アップロードされたファイルの名前を取得する
@@ -1057,8 +1057,8 @@
         <h2 id="modal-csvupload-done">挿入処理が完了しました</h2>
         <p class="modal-csvupload-result">行 エラー: 件</p>
         <div class="button-box">
-            <input class="modal-csvupload-close-button" type="button" value="閉じる">
-            <input class="modal-csvupload-button" type="button" value="アップロード">
+            <button class="modal-csvupload-close-button">閉じる</button>
+            <button class="modal-csvupload-button">アップロード</button>
         </div>
     </div>
     

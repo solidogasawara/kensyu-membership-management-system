@@ -74,6 +74,33 @@ namespace kensyu
 
             string email = emailStr; // メールアドレス
             string name = nameStr; // 名前
+
+            // 名前のあいまい検索とOR検索
+            // ◇あいまい検索
+            //  - 「田中*」、「*太郎」、「*中太*」のように名前検索欄にアスタリスクを記述するとあいまい検索を行うことができる
+            //  - 上の例の場合順番に、前方一致、後方一致、部分一致で検索を行う
+            //
+            // ◇OR検索
+            //  - 「田中*,佐藤*」のように名前検索欄にカンマを記述するとカンマ区切りでOR検索される
+            //  - この場合、「田中」か「佐藤」から始まる名前のユーザーを検索する
+
+            string[] splitedNames = null;
+
+            // nameが空文字でないかチェック
+            // 空文字ならあいまい検索、OR検索のための処理を実行しない
+            if(!string.IsNullOrEmpty(name))
+            {
+                // 「%」、「_」、「[」をエスケープ処理する
+                string escapedName = name.Replace("%", "[%]").Replace("_", "[_]").Replace("[", "[[]");
+
+                // アスタリスクを%に置換する
+                string replacedName = escapedName.Replace("*", "%");
+
+                // カンマ区切りで配列にする
+                // 「田中,,佐藤」=>「田中」、「」、「佐藤」のようにカンマ区切りにした時に空文字になる場合は無視して配列の中に入れない
+                splitedNames = replacedName.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToArray();
+            }
+
             string nameKana = nameKanaStr; // 名前(かな)
 
             // 誕生日検索
@@ -188,8 +215,21 @@ namespace kensyu
                     if (!String.IsNullOrEmpty(name))
                     {
                         // 検索条件(name)
-                        sql.Add(@"    OR name LIKE @name");
-                        command.Parameters.Add(new SqlParameter("@name", "%" + name + "%"));
+                        // splitedNamesの要素数だけループする
+                        for(int i = 0; i < splitedNames.Length; i++)
+                        {
+                            string sName = splitedNames[i];
+
+                            // 「田中 太郎」と「田中太郎」で検索できるようにする
+                            // 変数名は一意にしなくてはいけないので、インデックスを利用して重複しないようにする
+                            int doubleIdx = (i + 1) * 2;
+
+                            sql.Add($@"    OR name LIKE @name{doubleIdx - 1}");
+                            sql.Add($@"    OR REPLACE(name, ' ', '') LIKE @name{doubleIdx}");
+
+                            command.Parameters.Add(new SqlParameter($"@name{doubleIdx - 1}", sName));
+                            command.Parameters.Add(new SqlParameter($"@name{doubleIdx}", sName));
+                        }
                     }
 
                     // nameKanaの中身が空なら検索条件にname_kanaを含めない
@@ -232,8 +272,6 @@ namespace kensyu
                     sql.Add(@")");
                 }
 
-                //sql.Add(@"SELECT c.id, name, name_kana, mail, birthday, gender, p.prefecture, membership_status FROM V_Customer AS c");
-
                 // ListにAddしたSQL文をStringBuilderを使用して一行の文字列にする
                 StringBuilder sb = new StringBuilder();
                 foreach(string line in sql)
@@ -262,8 +300,6 @@ namespace kensyu
                 {
                     count = Convert.ToInt32(reader["count"]);
                 }
-
-
 
                 reader.Close();
 

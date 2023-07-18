@@ -181,7 +181,10 @@ label{
 }
 
 #modal-csvupload-window input {
-    /*     width: 86px; */
+    font-size: 1.5rem;
+}
+
+#modal-csvupload-window button {
     font-size: 2.0rem;
 }
 
