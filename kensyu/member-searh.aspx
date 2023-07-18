@@ -386,13 +386,17 @@
     
             const modalMemberDeleteIdObj = document.querySelector('#modal-member-delete-id');
             modalMemberDeleteIdObj.value = id;
+
+            const modalWindowYesBtn = document.querySelector('#modal-delete-confirm-window .yes');
     
             modalWindowObj.addEventListener('click', () => {
                 modalMemberDeleteIdObj.value = '';
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
+            });
 
-                searchResultUpdate();
+            modalWindowYesBtn.addEventListener('click', () => {
+                deleteBtnClicked();
             });
         }
 
@@ -445,6 +449,22 @@
                     console.log("upload");
                     csvUpload(csvFile);
                 }
+            });
+        }
+
+        // 検索ヒント画面
+        function searchHintWindowOpen() {
+            const modalBackgroundObj = document.querySelector('.modal-background');
+            modalBackgroundObj.style.display = 'block';
+    
+            const modalWindowObj = document.querySelector('#modal-searchhint-window');
+            modalWindowObj.style.display = 'block';
+
+            const modalWindowCloseBtn = document.querySelector('.modal-searchhint-close-button');
+
+            modalWindowCloseBtn.addEventListener('click', () => {
+                modalBackgroundObj.style.display = 'none';
+                modalWindowObj.style.display = 'none';
             });
         }
 
@@ -662,7 +682,7 @@
                     tableHeader.style.display = '';
 
                     // 既に表示されているテーブルを初期化する
-                    // カラムの行は削除しないようにするので、iは1から
+                    // カラムの行は削除しないようにするので、引数に1を指定
                     while (table.rows.length > 1) {
                         table.deleteRow(1);
                     }
@@ -965,6 +985,8 @@
                     } else if (result == "failed") {
                         alert("削除に失敗しました");
                     }
+
+                    searchResultUpdate();
                 },
                 error: function () {
                     alert("削除に失敗しました");
@@ -1040,7 +1062,7 @@
     <div id="modal-delete-confirm-window">
         <p>削除しますか？</p>
         <div class="button-box">
-            <input class="yes" type="submit" value="はい" onclick="deleteBtnClicked();" />
+            <input class="yes" type="submit" value="はい"" />
             <input class="no" type="button" value="いいえ" />
         </div>
         <input id="modal-member-delete-id" type="hidden" name="id" value="" />
@@ -1060,9 +1082,41 @@
             <button class="modal-csvupload-close-button">閉じる</button>
             <button class="modal-csvupload-button">アップロード</button>
         </div>
-    </div>
-    
+    </div>    
     <div class="modal-background"></div>
+
+    <div id="modal-searchhint-window">
+        <p>ヒント</p>
+        <div class="modal-searchhint-result">
+            <h2>あいまい検索</h2>
+            <p>アスタリスク(*)を利用すると、前方一致、後方一致、部分一致で検索が行えます。</p>
+            <ul>
+                <li>前方一致</li>
+                <p>田中*</p>
+                <li>後方一致</li>
+                <p>*太郎</p>
+                <li>部分一致</li>
+                <p>*中太*</p>
+                <li>「田」で始まり、「郎」で終わる</li>
+                <p>田*郎</p>
+            </ul>
+            <br>
+            <h2>OR検索</h2>
+            <p>カンマ(,)を利用すると、OR検索が行えます。</p>
+            <ul>
+                <li>「田中太郎」と「山田花子」の2名を検索結果に表示する</li>
+                <p>田中太郎,山田花子</p>
+                <li>あいまい検索との組み合わせ例</li>
+                <p>田中*郎,山*子,佐藤*,*一郎</p>
+            </ul>
+            <br>
+        </div>
+        <div class="button-box">
+            <input class="modal-searchhint-close-button" type="button" value="閉じる">
+        </div>
+    </div>
+    <div class="modal-background"></div>
+
     <header>
         <h1>会員管理システム</h1>
         <nav>
@@ -1091,9 +1145,9 @@
                 </tr>
                 <tr>
                     <th>名前</th>
-                    <td>
-                        
+                    <td style="position: relative;">
                         <input type="text" name="name" value="" />
+                        <button class="hint-button" onclick="searchHintWindowOpen()">?</button>
                     </td>
                     <th>名前(かな)</th>
                     <td>
