@@ -84,9 +84,11 @@ namespace kensyu
                 // 処理中に例外が発生した場合、Resultに"failed"を格納する
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
+                    SqlCommand command = null;
+                    SqlDataReader reader = null;
                     try
                     {
-                        SqlCommand command = new SqlCommand();
+                        command = new SqlCommand();
 
                         // ログインidの重複を調べるためのSQL文
                         string query = @"SELECT COUNT(*) AS count FROM V_Admin WHERE login_id = @loginId AND delete_flag = 0";
@@ -98,7 +100,7 @@ namespace kensyu
 
                         connection.Open();
 
-                        SqlDataReader reader = command.ExecuteReader();
+                        reader = command.ExecuteReader();
 
                         // もしcountが1以上なら重複ありとみなす
                         if (reader.Read())
@@ -112,6 +114,7 @@ namespace kensyu
                         }
 
                         reader.Close();
+                        command.Parameters.Clear();
 
                         // 重複ありだったならResultに"failed"を格納し、登録処理を実行しない
                         if (isLoginIdExist)
@@ -125,29 +128,18 @@ namespace kensyu
                             int count = 0;
 
                             // データ数を調べる
-                            // 処理中に例外が発生した場合、Resultに"failed"を格納する
-                            try
+                            query = "SELECT COUNT(*) AS count FROM M_Admin";
+                            command.CommandText = query;
+
+                            reader = command.ExecuteReader();
+
+                            if (reader.Read())
                             {
-                                query = "SELECT COUNT(*) AS count FROM M_Customer";
-
-                                connection.Open();
-
-                                if (reader.Read())
-                                {
-                                    string countStr = reader["count"].ToString();
-                                    count = Convert.ToInt32(countStr);
-                                }
-
-                                reader.Close();
+                                string countStr = reader["count"].ToString();
+                                count = Convert.ToInt32(countStr);
                             }
-                            catch (Exception e)
-                            {
-                                Debug.WriteLine(e.ToString());
 
-                                // 不明なエラー
-                                result.Result = "failed";
-                                errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
-                            }
+                            reader.Close();
 
                             // 登録処理開始
                             // パスワードはハッシュ化して保存する
@@ -179,8 +171,6 @@ namespace kensyu
 
                             command.CommandText = query;
                             command.Connection = connection;
-
-                            connection.Open();
 
                             using (SqlTransaction transaction = connection.BeginTransaction())
                             {
@@ -236,6 +226,16 @@ namespace kensyu
                         // 不明なエラー
                         result.Result = "failed";
                         errorMsg = AdminRegisterError.E1000_UNEXPECTED_ERROR;
+                    } finally
+                    {
+                        if (command != null)
+                        {
+                            command.Dispose();
+                        }
+                        if (reader != null)
+                        {
+                            reader.Dispose();
+                        }
                     }
                 }
             }
