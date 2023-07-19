@@ -150,6 +150,8 @@ namespace kensyu
                 }
             }
 
+            
+
             int prefecture_id = -1; // 都道府県(初期値は-1)
 
             // 都道府県が指定されていたなら、int型に変換してprefecture_idに代入する
@@ -512,18 +514,6 @@ namespace kensyu
                 }
 
                 string name = cols[1];
-
-                // nameが「田中 太郎」のような形式になっているかを調べる
-                // また、「田中 まり子」のように名前にひらがなが入っている可能性もあるため、
-                // 姓は漢字しか認めないが、名前はひらがなが含まれていても不正な文字列としない
-                string nameCheckRegex = @"^[ぁ-んァ-ヶ一-龠ー々]+ [ぁ-んァ-ヶ一-龠ー]+$";
-
-                // nameが不正なら、エラーメッセージを追加して次のループにスキップする
-                if(!Regex.IsMatch(name, nameCheckRegex))
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E010_NAME_ILLEGAL, rowCount));
-                    continue;
-                }
 
                 string nameKana = cols[2];
 

@@ -8,21 +8,6 @@ namespace kensyu
 {
     public class MemberInputChecker
     {
-        public bool NameKanjiCheck(string name)
-        {
-            // nameが漢字、ひらがな、カタカナのみの文字列か調べる
-            string nameCheckRegex = @"^[ぁ-んァ-ヶ一-龠ー]+$";
-
-            // nameに漢字、ひらがな、カタカナ以外が入力されていたならfalseを返す
-            if (!Regex.IsMatch(name, nameCheckRegex))
-            {
-                return false;
-            }
-
-            // 漢字のみならtrueを返す
-            return true;
-        }
-
         public bool NameHiraganaCheck(string name)
         {
             string nameKanaCheckRegex = @"^[ぁ-んー]+$";

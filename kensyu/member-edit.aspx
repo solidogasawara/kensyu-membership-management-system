@@ -269,26 +269,6 @@
                 hasInvalidInput = true;
             }
 
-            // 名前の入力欄に漢字、ひらがな、カタカナ以外の文字が入っていないかチェックする
-            const kanjiCheckRegex = /^[ぁ-んァ-ヶ一-龠ー]+$/;
-
-            // 漢字、ひらがな、カタカナ以外の文字が入っているかのフラグ
-            var nonKanjiDetected = {
-                "lastName": false,
-                "firstName": false
-            };
-
-            // チェック
-            if (!kanjiCheckRegex.test(lastNameStr)) {
-                nonKanjiDetected["lastName"] = true;
-                hasInvalidInput = true;
-            }
-
-            if (!kanjiCheckRegex.test(firstNameStr)) {
-                nonKanjiDetected["firstName"] = true;
-                hasInvalidInput = true;
-            }
-
             // 名前(かな)の入力欄にひらがな以外の文字が入っていないかチェックする
             const hiraganaCheckRegex = /^[ぁ-んー]+$/;
 
@@ -374,14 +354,6 @@
 
                 if (exceedsMaxLength["email"]) {
                     errorMsg += "メールアドレスに入力する事のできる最大文字数を超えています。" + "\n";
-                }
-
-                if (nonKanjiDetected["lastName"]) {
-                    errorMsg += "名前の姓の入力欄に漢字以外の文字が入力されています。" + "\n";
-                }
-
-                if (nonKanjiDetected["firstName"]) {
-                    errorMsg += "名前の名の入力欄に漢字以外の文字が入力されています。" + "\n";
                 }
 
                 if (nonHiraganaDetected["lastName"]) {

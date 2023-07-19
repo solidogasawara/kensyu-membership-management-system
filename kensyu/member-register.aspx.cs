@@ -44,19 +44,6 @@ namespace kensyu
             // それぞれの値が不正ならエラーメッセージを追加していく
             MemberInputChecker checker = new MemberInputChecker();
 
-            // lastNameとfirstNameが漢字、ひらがな、カタカナのみの文字列かチェックする
-            if(!checker.NameKanjiCheck(lastName))
-            {
-                errorMsgs.Add(MemberInputCheckError.E001_NON_KANJI_LASTNAME);
-                invalidInput = true;
-            }
-
-            if(!checker.NameKanjiCheck(firstName))
-            {
-                errorMsgs.Add(MemberInputCheckError.E002_NON_KANJI_FIRSTNAME);
-                invalidInput = true;
-            }
-
             // lastNameKanaとfirstNameKanaがひらがなのみの文字列かチェックする
             if(!checker.NameHiraganaCheck(lastNameKana))
             {
