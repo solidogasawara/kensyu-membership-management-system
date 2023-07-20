@@ -129,8 +129,9 @@ namespace kensyu
                 // idを連番にするために、データ数を取得する
                 int count = 0;
 
-                
+
                 using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlCommand command = new SqlCommand())
                 {
                     try
                     {
@@ -138,19 +139,20 @@ namespace kensyu
                         // 何らかの理由で取得に失敗した場合"failed"を返す
 
                         string query = "SELECT COUNT(*) AS count FROM M_Customer";
-                        SqlCommand command = new SqlCommand(query, connection);
+
+                        command.CommandText = query;
+                        command.Connection = connection;
 
                         connection.Open();
 
-                        SqlDataReader reader = command.ExecuteReader();
-
-                        if (reader.Read())
+                        using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            string countStr = reader["count"].ToString();
-                            count = Convert.ToInt32(countStr);
+                            if (reader.Read())
+                            {
+                                string countStr = reader["count"].ToString();
+                                count = Convert.ToInt32(countStr);
+                            }
                         }
-
-                        reader.Close();
 
                         // 登録処理実行
                         // 処理中に何らかの例外が発生した場合"failed"を、処理成功なら"success"を返す

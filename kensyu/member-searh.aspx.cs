@@ -194,9 +194,8 @@ namespace kensyu
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
-                SqlCommand command = new SqlCommand();
-
                 // SQL文を作成するためのListを用意する
                 List<string> sql = new List<string>();
 
@@ -218,7 +217,7 @@ namespace kensyu
                     {
                         // 検索条件(name)
                         // splitedNamesの要素数だけループする
-                        for(int i = 0; i < splitedNames.Length; i++)
+                        for (int i = 0; i < splitedNames.Length; i++)
                         {
                             string sName = splitedNames[i];
 
@@ -276,7 +275,7 @@ namespace kensyu
 
                 // ListにAddしたSQL文をStringBuilderを使用して一行の文字列にする
                 StringBuilder sb = new StringBuilder();
-                foreach(string line in sql)
+                foreach (string line in sql)
                 {
                     sb.Append(line);
                 }
@@ -290,20 +289,19 @@ namespace kensyu
 
                 connection.Open();
 
-                // SQL文を実行し、結果を得る
-                // 今回は、検索結果が何件かを取得する
-                SqlDataReader reader = command.ExecuteReader();
-
                 // 検索結果の件数
                 int count = -1;
 
-                // 実行結果から、変数に検索結果の件数を代入
-                if (reader.Read())
+                // SQL文を実行し、結果を得る
+                // 今回は、検索結果が何件かを取得する
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    count = Convert.ToInt32(reader["count"]);
+                    // 実行結果から、変数に検索結果の件数を代入
+                    if (reader.Read())
+                    {
+                        count = Convert.ToInt32(reader["count"]);
+                    }
                 }
-
-                reader.Close();
 
                 // 検索結果の件数が取得出来たら、会員データの取得を行う
                 // SELECT文を変更する
@@ -311,7 +309,7 @@ namespace kensyu
 
                 // もしresultAllフラグがfalseなら、取得するデータ数に制限をかける
                 // trueなら制限をかけない
-                if(resultAll == "False")
+                if (resultAll == "False")
                 {
                     // OFFSET - FETCH文を使用して、取得するデータ数を制限する
                     // これにより検索結果画面でページ分けを行う
@@ -358,27 +356,26 @@ namespace kensyu
 
                 // SQL文を実行する
                 // 今回は、結果から会員データを取得する
-                reader = command.ExecuteReader();
-
-                // 結果から会員データをクラスのフィールドに入れていく
-                while (reader.Read())
+                using(SqlDataReader reader = command.ExecuteReader())
                 {
-                    Customer customer = new Customer();
+                    // 結果から会員データをクラスのフィールドに入れていく
+                    while (reader.Read())
+                    {
+                        Customer customer = new Customer();
 
-                    customer.id = reader["id"].ToString(); // id
-                    customer.name = reader["name"].ToString(); // 名前
-                    customer.nameKana = reader["name_kana"].ToString(); // 名前(かな)
-                    customer.mail = reader["mail"].ToString(); // メールアドレス
-                    customer.birthday = reader["birthday"].ToString(); // 誕生日
-                    customer.gender = (bool)reader["gender"] ? "女性" : "男性"; // 性別
-                    customer.prefecture = reader["prefecture"].ToString(); // 都道府県名
-                    customer.membershipStatus = (bool)reader["membership_status"] ? "有効" : "退会"; // 会員状態
+                        customer.id = reader["id"].ToString(); // id
+                        customer.name = reader["name"].ToString(); // 名前
+                        customer.nameKana = reader["name_kana"].ToString(); // 名前(かな)
+                        customer.mail = reader["mail"].ToString(); // メールアドレス
+                        customer.birthday = reader["birthday"].ToString(); // 誕生日
+                        customer.gender = (bool)reader["gender"] ? "女性" : "男性"; // 性別
+                        customer.prefecture = reader["prefecture"].ToString(); // 都道府県名
+                        customer.membershipStatus = (bool)reader["membership_status"] ? "有効" : "退会"; // 会員状態
 
-                    // インスタンスをListに追加する
-                    customers.Add(customer);
+                        // インスタンスをListに追加する
+                        customers.Add(customer);
+                    }
                 }
-
-                reader.Close();
 
                 // customerDataにCustomerクラスのListと、検索結果の件数を格納する
                 customerData.Add("result", customers);
@@ -581,12 +578,11 @@ namespace kensyu
 
                 // prefectureStrを元に、都道府県Idを取得する
                 // もし存在しない都道府県が入っていた場合、エラーメッセージを追加して次のループにスキップする
-                using(SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlCommand command = new SqlCommand())
                 {
                     try
                     {
-                        SqlCommand command = new SqlCommand();
-
                         string query = "SELECT id FROM V_Prefecture WHERE prefecture = @prefecture";
 
                         command.Parameters.Add(new SqlParameter("@prefecture", prefectureStr));
@@ -598,15 +594,17 @@ namespace kensyu
 
                         SqlDataReader reader = command.ExecuteReader();
 
-                        if(reader.Read())
+                        if (reader.Read())
                         {
-                            prefectureId = (int) reader["id"];
-                        } else
+                            prefectureId = (int)reader["id"];
+                        }
+                        else
                         {
                             errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
                             continue;
                         }
-                    } catch(Exception e)
+                    }
+                    catch (Exception e)
                     {
                         Debug.WriteLine(e.ToString());
                         // 不明なエラー
@@ -638,11 +636,10 @@ namespace kensyu
                 // データ挿入開始
                 // もし挿入処理中に何かの例外が発生した場合、RollBackして挿入をキャンセルする
                 using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlCommand command = new SqlCommand())
                 {
                     try
                     {
-                        SqlCommand command = new SqlCommand();
-
                         StringBuilder sb = new StringBuilder();
                         sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, membership_status, created_at)");
                         sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @membershipStatus, @createdAt)");
@@ -677,7 +674,7 @@ namespace kensyu
                                 Debug.WriteLine(e.ToString());
 
                                 // エラー番号を元にエラーメッセージを追加する
-                                switch(e.Number)
+                                switch (e.Number)
                                 {
                                     case 8115:
                                         // idに指定できる最大値を超えたidを挿入しようとした
@@ -720,7 +717,6 @@ namespace kensyu
                         errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
                         continue;
                     }
-
                 }
             }
 
@@ -749,11 +745,10 @@ namespace kensyu
             // DELETE文を使用せず、UPDATE文で削除フラグをTRUEにする
             // 途中で例外が発生した場合、"failed", 成功したなら"success"を返す
             using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
                 try
                 {
-                    SqlCommand command = new SqlCommand();
-
                     string query = @"UPDATE M_Customer SET delete_flag = 1 WHERE id = @id";
 
                     command.Parameters.Add(new SqlParameter("@id", id));

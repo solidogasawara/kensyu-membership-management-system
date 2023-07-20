@@ -37,12 +37,11 @@ namespace kensyu
             // ログインidの存在を確認する
             // もし登録されていないログインidが入力されたならその時点でログイン失敗となる
             using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
                 // 処理中に例外が発生した場合、"error"を返す
                 try
                 {
-                    SqlCommand command = new SqlCommand();
-
                     string query = @"SELECT COUNT(*) AS count FROM V_Admin WHERE login_id = @loginId AND delete_flag = 0";
 
                     command.Parameters.Add(new SqlParameter("@loginId", loginId));
@@ -52,19 +51,21 @@ namespace kensyu
 
                     connection.Open();
 
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    if (reader.Read())
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        int loginIdCount = Convert.ToInt32(reader["count"]);
-
-                        // countが1ならログインidが存在することとみなし、フラグをtrueにする
-                        if (loginIdCount == 1)
+                        if (reader.Read())
                         {
-                            isLoginIdExist = true;
+                            int loginIdCount = Convert.ToInt32(reader["count"]);
+
+                            // countが1ならログインidが存在することとみなし、フラグをtrueにする
+                            if (loginIdCount == 1)
+                            {
+                                isLoginIdExist = true;
+                            }
                         }
                     }
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.WriteLine(e.ToString());
 
@@ -80,12 +81,11 @@ namespace kensyu
 
             // パスワードをチェックする
             using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
                 // パスワードチェック処理中に例外が発生した場合、"error"を返す
                 try
                 {
-                    SqlCommand command = new SqlCommand();
-
                     string query = @"SELECT role_id, salt, password FROM V_Admin WHERE login_id = @loginId AND delete_flag = 0";
 
                     command.Parameters.Add(new SqlParameter("@loginId", loginId));
@@ -122,7 +122,8 @@ namespace kensyu
                             return "correct";
                         }
                     }
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.WriteLine(e.ToString());
 

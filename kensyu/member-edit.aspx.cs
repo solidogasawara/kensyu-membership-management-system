@@ -37,6 +37,7 @@ namespace kensyu
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
                 // SQL文を実行して取得したデータを格納するList
                 List<Customer> customerData = new List<Customer>();
@@ -44,8 +45,6 @@ namespace kensyu
                 // 会員情報取得中に例外が発生した場合"failed"を返す
                 try
                 {
-                    SqlCommand command = new SqlCommand();
-
                     // SQL文
                     string query = @"SELECT name, name_kana, mail, birthday, gender, prefecture_id, membership_status FROM V_Customer WHERE id = @id";
 
@@ -57,27 +56,28 @@ namespace kensyu
 
                     connection.Open();
 
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    if (reader.Read())
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        Customer customer = new Customer();
+                        if (reader.Read())
+                        {
+                            Customer customer = new Customer();
 
-                        customer.name = reader["name"].ToString();
-                        customer.nameKana = reader["name_kana"].ToString();
-                        customer.mail = reader["mail"].ToString();
+                            customer.name = reader["name"].ToString();
+                            customer.nameKana = reader["name_kana"].ToString();
+                            customer.mail = reader["mail"].ToString();
 
-                        DateTime birthday = (DateTime)reader["birthday"];
-                        customer.birthday = birthday.ToString("yyyy-MM-dd");
+                            DateTime birthday = (DateTime)reader["birthday"];
+                            customer.birthday = birthday.ToString("yyyy-MM-dd");
 
-                        customer.gender = (bool)reader["gender"] ? "2" : "1";
-                        customer.prefecture = reader["prefecture_id"].ToString();
-                        customer.membershipStatus = (bool)reader["membership_status"] ? "1" : "2";
+                            customer.gender = (bool)reader["gender"] ? "2" : "1";
+                            customer.prefecture = reader["prefecture_id"].ToString();
+                            customer.membershipStatus = (bool)reader["membership_status"] ? "1" : "2";
 
-                        customerData.Add(customer);
+                            customerData.Add(customer);
+                        }
                     }
-                    reader.Close();
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     Debug.WriteLine(e.ToString());
 
@@ -213,11 +213,10 @@ namespace kensyu
                 // 更新時に例外が発生した場合、"failed"を、
                 // 成功したなら"success"を返す
                 using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlCommand command = new SqlCommand())
                 {
                     try
                     {
-                        SqlCommand command = new SqlCommand();
-
                         StringBuilder sb = new StringBuilder();
 
                         // SQL文を作成する
