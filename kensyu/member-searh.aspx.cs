@@ -507,10 +507,20 @@ namespace kensyu
                 int id = -1;
 
                 // idStrに数字以外のものが入っていた場合、エラーメッセージを追加して次のループにスキップする
-                if(!int.TryParse(idStr, out id))
+                string idCheckRegex = @"^[0-9]+$";
+
+                if(!Regex.IsMatch(idStr, idCheckRegex))
                 {
                     errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E008_ID_ILLEGAL, rowCount));
                     continue;
+                } else
+                {
+                    if(!int.TryParse(idStr, out id))
+                    {
+                        // idに指定できる最大値を超えたidを挿入しようとした
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
+                        continue;
+                    }
                 }
 
                 string name = cols[1];
@@ -670,7 +680,7 @@ namespace kensyu
                                 switch(e.Number)
                                 {
                                     case 8115:
-                                        // idに指定できる最大文字数を超えた文字数のidを挿入しようとした
+                                        // idに指定できる最大値を超えたidを挿入しようとした
                                         errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
                                         continue;
                                     case 2628:
