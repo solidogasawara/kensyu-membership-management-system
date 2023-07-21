@@ -200,6 +200,14 @@ label{
     background-color: gray;
 }
 
+#modal-csvupload-window .modal-csvupload-close-button:disabled {
+    opacity: 0.3;
+}
+
+#modal-csvupload-window .modal-csvupload-button:disabled {
+    opacity: 0.3;
+}
+
 #modal-csvupload-window .modal-csvupload-result {
     text-align: left;
     color: green;

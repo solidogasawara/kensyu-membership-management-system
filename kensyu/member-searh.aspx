@@ -388,16 +388,19 @@
             modalMemberDeleteIdObj.value = id;
 
             const modalWindowYesBtn = document.querySelector('#modal-delete-confirm-window .yes');
-    
-            modalWindowObj.addEventListener('click', () => {
+
+            modalWindowYesBtn.addEventListener('click', deleteBtnClicked);
+
+            const windowClicked = () => {
                 modalMemberDeleteIdObj.value = '';
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
-            });
 
-            modalWindowYesBtn.addEventListener('click', () => {
-                deleteBtnClicked();
-            });
+                modalWindowObj.removeEventListener('click', windowClicked);
+                modalWindowYesBtn.removeEventListener('click', deleteBtnClicked);
+            };
+
+            modalWindowObj.addEventListener('click', windowClicked);
         }
 
         // csvアップロード画面
@@ -420,7 +423,8 @@
 
             const modalFileUploadObj = document.getElementById('modal-csvupload-file');
             var csvFile = null;
-            modalFileUploadObj.addEventListener('change', (e) => {
+
+            const fileSelect = (e) => {
                 // 表示をリセット
                 modalTextarea.value = '';
                 modalDoneObj.style.visibility = 'hidden';
@@ -428,10 +432,22 @@
                 modalResultObj.style.visibility = 'hidden';
 
                 csvFile = e.target.files[0];
-            });
+            };
 
-            // 閉じるボタンを押したとき、ウィンドウの表示を隠す
-            modalWindowCloseBtn.addEventListener('click', () => {
+            modalFileUploadObj.addEventListener('change', fileSelect);
+
+            const uploadBtnClicked = () => {
+                // まだファイルがアップロードされていないなら、ボタンを押しても何の処理も実行しない
+                if (csvFile != null) {
+                    console.log("upload");
+                    csvUpload(csvFile);
+                }
+            };
+
+            // アップロードボタンを押したとき、データ挿入処理を実行する
+            modalWindowUploadBtn.addEventListener('click', uploadBtnClicked);
+
+            const closeBtnClicked = () => {
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
                 modalFileUploadObj.value = '';
@@ -440,16 +456,15 @@
                 modalResultObj.innerHTML = '';
                 modalResultObj.style.visibility = 'hidden';
                 csvFile = null;
-            });
 
-            // アップロードボタンを押したとき、データ挿入処理を実行する
-            modalWindowUploadBtn.addEventListener('click', () => {
-                // まだファイルがアップロードされていないなら、ボタンを押しても何の処理も実行しない
-                if (csvFile != null) {
-                    console.log("upload");
-                    csvUpload(csvFile);
-                }
-            });
+                // イベントリスナーを削除
+                modalFileUploadObj.removeEventListener('change', fileSelect);
+                modalWindowUploadBtn.removeEventListener('click', uploadBtnClicked);
+                modalWindowCloseBtn.removeEventListener('click', closeBtnClicked);
+            };
+
+            // 閉じるボタンを押したとき、ウィンドウの表示を隠す
+            modalWindowCloseBtn.addEventListener('click', closeBtnClicked);
         }
 
         // 検索ヒント画面
@@ -462,10 +477,12 @@
 
             const modalWindowCloseBtn = document.querySelector('.modal-searchhint-close-button');
 
-            modalWindowCloseBtn.addEventListener('click', () => {
+            const closeBtnClicked = () => {
                 modalBackgroundObj.style.display = 'none';
                 modalWindowObj.style.display = 'none';
-            });
+            };
+
+            modalWindowCloseBtn.addEventListener('click', closeBtnClicked);
         }
 
         function csvUpload(csvFile) {
@@ -480,6 +497,18 @@
 
             if (extension != "csv") {
                 modalTextarea.value = "エラー: csvファイル以外の種類のファイルがアップロードされました";
+                return;
+            }
+
+            // ファイルのサイズ(バイト数)を取得する
+            const fileSize = csvFile.size;
+
+            // 最大サイズ(約33KB)
+            const maxSize = 33000;
+
+            // ファイルサイズが最大サイズを超えていた場合、エラーを表示する　
+            if (fileSize > maxSize) {
+                modalTextarea.value = "エラー: ファイルのサイズが大きすぎます。アップロードできるファイルのサイズは約33KBまでです。";
                 return;
             }
 
@@ -498,6 +527,13 @@
             reader.onload = function () {
                 // FileReaderで読み取った文字列を変数に格納する
                 var csv = reader.result;
+
+                const modalWindowCloseBtn = document.querySelector('.modal-csvupload-close-button');
+                const modalWindowUploadBtn = document.querySelector('.modal-csvupload-button');
+
+                // 挿入処理中はボタンを押せなくする
+                modalWindowCloseBtn.disabled = true;
+                modalWindowUploadBtn.disabled = true;
 
                 // ajaxでC#のメソッドを呼び出す
                 $.ajax({
@@ -524,13 +560,26 @@
                         modalResultObj.style.visibility = 'visible';
 
                         const modalDoneObj = document.getElementById('modal-csvupload-done');
+
+                        if (errorMsgs.length == 0) {
+                            modalDoneObj.innerText = "挿入処理が完了しました";
+                        } else {
+                            modalDoneObj.innerText = "挿入処理中にエラーが発生しました";
+                        }
                         modalDoneObj.style.visibility = 'visible';
+
+                        // 挿入処理が完了したら、再びボタンを押せるようにする
+                        modalWindowCloseBtn.disabled = false;
+                        modalWindowUploadBtn.disabled = false;
 
                         // 挿入処理が完了したら、検索結果を更新する
                         searchResultUpdate();
                     },
                     error: function (result) {
                         alert("失敗: " + result.status);
+
+                        modalWindowCloseBtn.disabled = false;
+                        modalWindowUploadBtn.disabled = false;
                     }
                 });
             }

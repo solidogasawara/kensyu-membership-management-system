@@ -19,6 +19,8 @@ namespace kensyu
         public readonly static string E010_NAME_ILLEGAL = "名前の形式が不正です";
         public readonly static string E011_NAMEKANA_ILLEGAL = "名前(かな)の形式が不正です";
         public readonly static string E012_EMAIL_ILLEGAL = "メールアドレスの形式が不正です";
+        public readonly static string E013_HEADER_ILLEGAL = "誤ったCSVファイルがアップロードされました";
+        public readonly static string E014_EXCESS_DATA = "1行に過剰なデータが含まれています";
         public readonly static string E1000_UNEXPECTED_ERROR = "予期せぬエラーが発生しました";
 
         public static string GenerateErrorMsg(string errorMsg, int rowCount)

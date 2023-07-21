@@ -453,277 +453,289 @@ namespace kensyu
             // csvファイルを1行ずつ配列に格納する
             string[] separator = new string[] { "\r\n", "\n" };
             // Splitメソッドを利用して改行文字ごとに区切って配列に格納する
-            string[] csvRows = csv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            string[] csvRows = csv.Split(separator, StringSplitOptions.None);
+
+            // 挿入結果を記録するクラスをインスタンス化
+            CsvInsertResult insertResult = new CsvInsertResult();
 
             string connectionString = ConfigurationManager.ConnectionStrings["MyConnectionString"].ConnectionString;
 
             // ヘッダー
             string header = "id,名前,名前(かな),メールアドレス,生年月日,性別,都道府県,会員状態";
 
-            // 何行目にエラーが発生したかを表現するために使用するカウンタ
-            int rowCount = 0;
+            string headerCheckRegex = @"^id,名前,名前\(かな\),メールアドレス,生年月日,性別,都道府県,会員状態,?$";
+            
+            // カラムの数
+            int columnCount = header.Split(',').Length;
 
-            // csvファイルを元に挿入処理を実行する
-            // csvファイルの行分だけループする
-            foreach (string row in csvRows)
+            // csvファイルのヘッダーを比較して、同一でなければ誤ったcsvファイルがアップロードされたと判断し、
+            // 挿入処理を中断する
+            string firstRow = csvRows[0];
+
+            if(!Regex.IsMatch(firstRow, headerCheckRegex))
             {
-                rowCount++;
+                errorMsgs.Add("エラー: " + CsvInsertError.E013_HEADER_ILLEGAL);
 
-                // その行がヘッダーだったなら次のループにスキップする
-                if (row == header)
+                insertResult.errorMsgs = errorMsgs;
+                insertResult.result = "";
+            } else
+            {
+                // 何行目にエラーが発生したかを表現するために使用するカウンタ
+                int rowCount = 0;
+
+                // csvファイルを元に挿入処理を実行する
+                // csvファイルの行分だけループする
+                foreach (string row in csvRows)
                 {
-                    continue;
-                }
+                    rowCount++;
 
-                // カンマ区切りで配列に格納する
-                string[] cols = row.Split(new string[] { "," }, StringSplitOptions.None);
-
-                // 未入力チェック
-
-                // 未入力のデータがあったか
-                bool isEmpty = false;
-
-                foreach(string col in cols)
-                {
-                    if(string.IsNullOrEmpty(col))
+                    // その行がヘッダーだったなら次のループにスキップする
+                    if (Regex.IsMatch(row, headerCheckRegex))
                     {
-                        isEmpty = true;
-                        break;
-                    }
-                }
-
-                // もし未入力のデータがあったなら、エラーメッセージを追加して次のループにスキップする
-                if (isEmpty)
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
-                    continue;
-                }
-
-                // 変数に配列の中身を格納していく
-                string idStr = cols[0];
-                int id = -1;
-
-                // idStrに数字以外のものが入っていた場合、エラーメッセージを追加して次のループにスキップする
-                string idCheckRegex = @"^[0-9]+$";
-
-                if(!Regex.IsMatch(idStr, idCheckRegex))
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E008_ID_ILLEGAL, rowCount));
-                    continue;
-                } else
-                {
-                    if(!int.TryParse(idStr, out id))
-                    {
-                        // idに指定できる最大値を超えたidを挿入しようとした
-                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
                         continue;
                     }
-                }
 
-                string name = cols[1];
+                    // カンマ区切りで配列に格納する
+                    string[] cols = row.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
-                string nameKana = cols[2];
-
-                // nameKanaが「たなか たろう」のような形式になっているかを調べる
-                string nameKanaCheckRegex = @"^[ぁ-んー]+ [ぁ-んー]+$";
-
-                // nameKanaが不正なら、エラーメッセージを追加して次のループにスキップする
-                if(!Regex.IsMatch(nameKana, nameKanaCheckRegex))
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E011_NAMEKANA_ILLEGAL, rowCount));
-                    continue;
-                }
-
-                string email = cols[3];
-
-                // メールアドレスの形式が正しいものかを調べる
-                string emailCheckRegex = @"^[a-zA-Z0-9_+-]+(\.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$";
-
-                // メールアドレスが不正なら、エラーメッセージを追加して次のループにスキップする
-                if (!Regex.IsMatch(email, emailCheckRegex))
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E012_EMAIL_ILLEGAL, rowCount));
-                    continue;
-                }
-
-                string birthdayStr = cols[4];
-                DateTime birthday = DateTime.Now;
-
-                // birthdayStrに不正な形式の日付が入っていた場合、エラーメッセージを追加して次のループにスキップする
-                if(!DateTime.TryParse(birthdayStr, out birthday))
-                {
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E004_DATETIME_ILLEGAL, rowCount));
-                    continue;
-                }
-
-                string genderStr = cols[5];
-                int gender = -1;
-
-                if(genderStr == "男性")
-                {
-                    gender = 0;
-                } else if (genderStr == "女性")
-                {
-                    gender = 1;
-                } else
-                {
-                    // genderStrに"男性"、"女性"以外の文字列が入っていた場合、
-                    // エラーメッセージを追加して次のループにスキップする
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E005_GENDER_ILLEGAL, rowCount));
-                    continue;
-                }
-
-                string prefectureStr = cols[6];
-                int prefectureId = -1;
-
-                // prefectureStrを元に、都道府県Idを取得する
-                // もし存在しない都道府県が入っていた場合、エラーメッセージを追加して次のループにスキップする
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                using (SqlCommand command = new SqlCommand())
-                {
-                    try
+                    // columnCountとcolsの要素数を比べて数が異なるなら、エラーメッセージを表示して次のループにスキップする
+                    // 要素が少ない場合と、多い場合でエラーメッセージを変える
+                    if(cols.Length != columnCount)
                     {
-                        string query = "SELECT id FROM V_Prefecture WHERE prefecture = @prefecture";
-
-                        command.Parameters.Add(new SqlParameter("@prefecture", prefectureStr));
-
-                        command.CommandText = query;
-                        command.Connection = connection;
-
-                        connection.Open();
-
-                        SqlDataReader reader = command.ExecuteReader();
-
-                        if (reader.Read())
+                        if(cols.Length > columnCount)
                         {
-                            prefectureId = (int)reader["id"];
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E014_EXCESS_DATA, rowCount));
+                        } else if (cols.Length < columnCount)
+                        {
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
                         }
-                        else
+
+                        continue;
+                    }
+
+                    // 変数に配列の中身を格納していく
+                    string idStr = cols[0];
+                    int id = -1;
+
+                    // idStrに数字以外のものが入っていた場合、エラーメッセージを追加して次のループにスキップする
+                    string idCheckRegex = @"^[0-9]+$";
+
+                    if(!Regex.IsMatch(idStr, idCheckRegex))
+                    {
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E008_ID_ILLEGAL, rowCount));
+                        continue;
+                    } else
+                    {
+                        if(!int.TryParse(idStr, out id))
                         {
-                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
+                            // idに指定できる最大値を超えたidを挿入しようとした
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
                             continue;
                         }
                     }
-                    catch (Exception e)
+
+                    string name = cols[1];
+
+                    string nameKana = cols[2];
+
+                    // nameKanaが「たなか たろう」のような形式になっているかを調べる
+                    string nameKanaCheckRegex = @"^[ぁ-んー]+ [ぁ-んー]+$";
+
+                    // nameKanaが不正なら、エラーメッセージを追加して次のループにスキップする
+                    if(!Regex.IsMatch(nameKana, nameKanaCheckRegex))
                     {
-                        Debug.WriteLine(e.ToString());
-                        // 不明なエラー
-                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E011_NAMEKANA_ILLEGAL, rowCount));
                         continue;
                     }
-                }
 
-                string membershipStatusStr = cols[7];
-                int membershipStatus = -1;
+                    string email = cols[3];
 
-                if(membershipStatusStr == "退会")
-                {
-                    membershipStatus = 0;
-                } else if (membershipStatusStr == "有効")
-                {
-                    membershipStatus = 1;
-                } else
-                {
-                    // membershipStatusStrに"退会"、"有効"以外の文字列が入っていた場合、
-                    // エラーメッセージを追加して次のループにスキップする
-                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E009_MEMBERSHIPSTATUS_ILLEGAL, rowCount));
-                    continue;
-                }
+                    // メールアドレスの形式が正しいものかを調べる
+                    string emailCheckRegex = @"^[a-zA-Z0-9_+-]+(\.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$";
 
-                // データ挿入日
-                DateTime createdAt = DateTime.Now;
-
-                // データ挿入開始
-                // もし挿入処理中に何かの例外が発生した場合、RollBackして挿入をキャンセルする
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                using (SqlCommand command = new SqlCommand())
-                {
-                    try
+                    // メールアドレスが不正なら、エラーメッセージを追加して次のループにスキップする
+                    if (!Regex.IsMatch(email, emailCheckRegex))
                     {
-                        StringBuilder sb = new StringBuilder();
-                        sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, membership_status, created_at)");
-                        sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @membershipStatus, @createdAt)");
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E012_EMAIL_ILLEGAL, rowCount));
+                        continue;
+                    }
 
-                        command.Parameters.Add(new SqlParameter("@id", id));
-                        command.Parameters.Add(new SqlParameter("@name", name));
-                        command.Parameters.Add(new SqlParameter("@nameKana", nameKana));
-                        command.Parameters.Add(new SqlParameter("@email", email));
-                        command.Parameters.Add(new SqlParameter("@birthday", birthday));
-                        command.Parameters.Add(new SqlParameter("@gender", gender));
-                        command.Parameters.Add(new SqlParameter("@prefectureId", prefectureId));
-                        command.Parameters.Add(new SqlParameter("@membershipStatus", membershipStatus));
-                        command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
+                    string birthdayStr = cols[4];
+                    DateTime birthday = DateTime.Now;
 
-                        command.CommandText = sb.ToString();
-                        command.Connection = connection;
+                    // birthdayStrに不正な形式の日付が入っていた場合、エラーメッセージを追加して次のループにスキップする
+                    if(!DateTime.TryParse(birthdayStr, out birthday))
+                    {
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E004_DATETIME_ILLEGAL, rowCount));
+                        continue;
+                    }
 
-                        connection.Open();
+                    string genderStr = cols[5];
+                    int gender = -1;
 
-                        using (SqlTransaction transaction = connection.BeginTransaction())
+                    if(genderStr == "男性")
+                    {
+                        gender = 0;
+                    } else if (genderStr == "女性")
+                    {
+                        gender = 1;
+                    } else
+                    {
+                        // genderStrに"男性"、"女性"以外の文字列が入っていた場合、
+                        // エラーメッセージを追加して次のループにスキップする
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E005_GENDER_ILLEGAL, rowCount));
+                        continue;
+                    }
+
+                    string prefectureStr = cols[6];
+                    int prefectureId = -1;
+
+                    // prefectureStrを元に、都道府県Idを取得する
+                    // もし存在しない都道府県が入っていた場合、エラーメッセージを追加して次のループにスキップする
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    using (SqlCommand command = new SqlCommand())
+                    {
+                        try
                         {
-                            try
-                            {
-                                command.Transaction = transaction;
-                                command.ExecuteNonQuery();
+                            string query = "SELECT id FROM V_Prefecture WHERE prefecture = @prefecture";
 
-                                transaction.Commit();
+                            command.Parameters.Add(new SqlParameter("@prefecture", prefectureStr));
+
+                            command.CommandText = query;
+                            command.Connection = connection;
+
+                            connection.Open();
+
+                            SqlDataReader reader = command.ExecuteReader();
+
+                            if (reader.Read())
+                            {
+                                prefectureId = (int)reader["id"];
                             }
-                            catch (SqlException e)
+                            else
                             {
-                                transaction.Rollback();
-                                Debug.WriteLine(e.ToString());
-
-                                // エラー番号を元にエラーメッセージを追加する
-                                switch (e.Number)
-                                {
-                                    case 8115:
-                                        // idに指定できる最大値を超えたidを挿入しようとした
-                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
-                                        continue;
-                                    case 2628:
-                                        // 何らかの文字列が挿入できる最大文字数を超えている
-                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E002_STRING_TOOLONG, rowCount));
-                                        continue;
-                                    case 2627:
-                                        // 既に登録されているidを登録しようとした
-                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E003_ID_DUPLICATE, rowCount));
-                                        continue;
-                                    case 109:
-                                        // 挿入に必要な値が不足している
-                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
-                                        continue;
-                                    default:
-                                        // 不明なエラー
-                                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
-                                        continue;
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                transaction.Rollback();
-                                Debug.WriteLine(e.ToString());
-
-                                // 不明なエラー
-                                errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E006_PREFECTURE_NOT_EXIST, rowCount));
                                 continue;
                             }
                         }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.ToString());
+                            // 不明なエラー
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                            continue;
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine(e.ToString());
 
-                        // 不明なエラー
-                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                    string membershipStatusStr = cols[7];
+                    int membershipStatus = -1;
+
+                    if(membershipStatusStr == "退会")
+                    {
+                        membershipStatus = 0;
+                    } else if (membershipStatusStr == "有効")
+                    {
+                        membershipStatus = 1;
+                    } else
+                    {
+                        // membershipStatusStrに"退会"、"有効"以外の文字列が入っていた場合、
+                        // エラーメッセージを追加して次のループにスキップする
+                        errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E009_MEMBERSHIPSTATUS_ILLEGAL, rowCount));
                         continue;
                     }
-                }
-            }
 
-            // 挿入結果を記録するクラスをインスタンス化
-            CsvInsertResult insertResult = new CsvInsertResult();
-            insertResult.errorMsgs = errorMsgs;
-            insertResult.result = rowCount + "行 エラー: " + errorMsgs.Count + "件";
+                    // データ挿入日
+                    DateTime createdAt = DateTime.Now;
+
+                    // データ挿入開始
+                    // もし挿入処理中に何かの例外が発生した場合、RollBackして挿入をキャンセルする
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    using (SqlCommand command = new SqlCommand())
+                    {
+                        try
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append(@"INSERT INTO M_Customer (id, name, name_kana, mail, birthday, gender, prefecture_id, membership_status, created_at)");
+                            sb.Append(@"VALUES (@id, @name, @nameKana, @email, @birthday, @gender, @prefectureId, @membershipStatus, @createdAt)");
+
+                            command.Parameters.Add(new SqlParameter("@id", id));
+                            command.Parameters.Add(new SqlParameter("@name", name));
+                            command.Parameters.Add(new SqlParameter("@nameKana", nameKana));
+                            command.Parameters.Add(new SqlParameter("@email", email));
+                            command.Parameters.Add(new SqlParameter("@birthday", birthday));
+                            command.Parameters.Add(new SqlParameter("@gender", gender));
+                            command.Parameters.Add(new SqlParameter("@prefectureId", prefectureId));
+                            command.Parameters.Add(new SqlParameter("@membershipStatus", membershipStatus));
+                            command.Parameters.Add(new SqlParameter("@createdAt", createdAt));
+
+                            command.CommandText = sb.ToString();
+                            command.Connection = connection;
+
+                            connection.Open();
+
+                            using (SqlTransaction transaction = connection.BeginTransaction())
+                            {
+                                try
+                                {
+                                    command.Transaction = transaction;
+                                    command.ExecuteNonQuery();
+
+                                    transaction.Commit();
+                                }
+                                catch (SqlException e)
+                                {
+                                    transaction.Rollback();
+                                    Debug.WriteLine(e.ToString());
+
+                                    // エラー番号を元にエラーメッセージを追加する
+                                    switch (e.Number)
+                                    {
+                                        case 8115:
+                                            // idに指定できる最大値を超えたidを挿入しようとした
+                                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E001_ID_OVERFLOW, rowCount));
+                                            continue;
+                                        case 2628:
+                                            // 何らかの文字列が挿入できる最大文字数を超えている
+                                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E002_STRING_TOOLONG, rowCount));
+                                            continue;
+                                        case 2627:
+                                            // 既に登録されているidを登録しようとした
+                                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E003_ID_DUPLICATE, rowCount));
+                                            continue;
+                                        case 109:
+                                            // 挿入に必要な値が不足している
+                                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E007_NOT_ENOUGH_VALUE, rowCount));
+                                            continue;
+                                        default:
+                                            // 不明なエラー
+                                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                            continue;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    transaction.Rollback();
+                                    Debug.WriteLine(e.ToString());
+
+                                    // 不明なエラー
+                                    errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                                    continue;
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.ToString());
+
+                            // 不明なエラー
+                            errorMsgs.Add(CsvInsertError.GenerateErrorMsg(CsvInsertError.E1000_UNEXPECTED_ERROR, rowCount));
+                            continue;
+                        }
+                    }
+                }
+                insertResult.errorMsgs = errorMsgs;
+                insertResult.result = rowCount + "行 エラー: " + errorMsgs.Count + "件";
+            }
 
             JavaScriptSerializer js = new JavaScriptSerializer();
 
