@@ -386,6 +386,12 @@ main .search-form .hint-button {
     height: 100%;
     text-align: center;
     font-size: 1.5rem;
+    background: orange;
+}
+
+main .search-form .hint-button img {
+    width: 70%;
+    filter: invert(100%);
 }
 
 main .search-form .button-box{

@@ -121,6 +121,7 @@
     <Content Include="css\common.css" />
     <Content Include="css\loginPageStyle.css" />
     <Content Include="css\registerPageStyle.css" />
+    <Content Include="img\01028.png" />
     <Content Include="member-searh.aspx" />
     <Content Include="member-register.aspx" />
     <Content Include="member-edit.aspx" />
@@ -201,7 +202,6 @@
     <Compile Include="AdminRegisterInputChecker.cs" />
     <Compile Include="AdminRegisterResult.cs" />
     <Compile Include="AuthenticationManager.cs" />
-    <Compile Include="CharacterCompatibilityDetector.cs" />
     <Compile Include="CsvInsertResult.cs" />
     <Compile Include="Customer.cs" />
     <Compile Include="MemberError.cs" />

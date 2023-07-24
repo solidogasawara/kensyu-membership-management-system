@@ -1196,7 +1196,9 @@
                     <th>名前</th>
                     <td style="position: relative;">
                         <input type="text" name="name" value="" />
-                        <button class="hint-button" onclick="searchHintWindowOpen()">?</button>
+                        <button class="hint-button" onclick="searchHintWindowOpen()">
+                            <img src="./img/01028.png" width="100">
+                        </button>
                     </td>
                     <th>名前(かな)</th>
                     <td>
